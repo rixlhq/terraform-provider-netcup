@@ -30,8 +30,14 @@ func IsNotFound(err error) bool {
 	return errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound
 }
 
-const defaultBaseURL = "https://www.servercontrolpanel.de/scp-core"
-const tokenURL = "https://www.servercontrolpanel.de/realms/scp/protocol/openid-connect/token"
+const (
+	defaultBaseURL   = "https://www.servercontrolpanel.de/scp-core"
+	tokenURL         = "https://www.servercontrolpanel.de/realms/scp/protocol/openid-connect/token"
+	maxRetries       = 3
+	initialBackoff   = 500 * time.Millisecond
+	taskTimeout      = 5 * time.Minute
+	taskPollInterval = 2 * time.Second
+)
 
 // Client interacts with the netcup SCP REST API.
 type Client struct {
@@ -87,29 +93,6 @@ func (c *Client) Put(ctx context.Context, path string, body []byte) ([]byte, err
 // Delete performs a DELETE request against the SCP API and returns the response body.
 func (c *Client) Delete(ctx context.Context, path string) ([]byte, error) {
 	return c.doWithRetry(ctx, http.MethodDelete, path, nil, nil)
-}
-
-func (c *Client) doWithRetry(ctx context.Context, method, path string, query url.Values, body []byte) ([]byte, error) {
-	bodyBytes, status, err := c.do(ctx, method, path, query, body)
-	if err != nil {
-		return nil, err
-	}
-
-	if status == http.StatusUnauthorized && c.refreshToken != "" {
-		if err := c.refresh(ctx); err != nil {
-			return nil, fmt.Errorf("token refresh failed: %w", err)
-		}
-		bodyBytes, status, err = c.do(ctx, method, path, query, body)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if status >= 400 {
-		return nil, &APIError{StatusCode: status, Body: string(bodyBytes)}
-	}
-
-	return bodyBytes, nil
 }
 
 func (c *Client) do(ctx context.Context, method, path string, query url.Values, body []byte) ([]byte, int, error) {
@@ -204,9 +187,6 @@ func (c *Client) refresh(ctx context.Context) error {
 	if tr.RefreshToken != "" {
 		c.refreshToken = tr.RefreshToken
 	}
-
-	// Expire a little before actual expiry to avoid edge cases.
-	_ = time.Duration(tr.ExpiresIn) * time.Second
 
 	return nil
 }
