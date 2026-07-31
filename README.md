@@ -120,15 +120,67 @@ All SCP `GET` endpoints are available as data sources with names derived from
 their path, e.g. `netcup_scp_server_interfaces`, `netcup_scp_server_snapshots`,
 `netcup_scp_rdns_ipv4`, `netcup_scp_tasks`, `netcup_scp_user_images`, etc.
 
+## SCP Resources
+
+### `netcup_scp_server`
+
+Manage mutable attributes of an existing SCP server. The server cannot be created
+or deleted via the SCP API; this resource adopts an existing server by id and
+applies patches.
+
+```hcl
+resource "netcup_scp_server" "example" {
+  server_id = 12345
+
+  hostname = "srv.example.com"
+  nickname = "My Server"
+  autostart = true
+  uefi      = false
+
+  bootorder = ["HDD", "CDROM", "NETWORK"]
+  os_optimization = "LINUX"
+  keyboard_layout = "de"
+
+  cpu_topology = {
+    socket_count           = 1
+    cores_per_socket_count = 2
+  }
+}
+```
+
+### `netcup_scp_server_action`
+
+Trigger one-off server actions such as `start`, `stop`, `reset`, `powercycle`,
+`suspend`, `rescue_activate`, `snapshot_create`, `snapshot_revert`,
+`iso_attach`, `image_setup`, `disk_format`, `firewall_reapply`, and others.
+
+```hcl
+resource "netcup_scp_server_action" "start" {
+  server_id = 12345
+  action    = "start"
+}
+
+resource "netcup_scp_server_action" "snapshot" {
+  server_id = 12345
+  action    = "snapshot_create"
+
+  body = jsonencode({
+    name   = "before-upgrade"
+    online = true
+  })
+}
+```
+
+Use the `triggers` map to force an action to run again when needed.
+
 ## Limitations
 
 - Netcup does not support per-record TTLs; TTL is set per zone. Use
   `netcup_dns_zone` to change it.
 - Creating or deleting DNS zones is not supported by the CCP API; only records
   within an existing zone can be managed.
-- SCP resources are currently exposed as read-only data sources. Management
-  resources (server start/stop, snapshot creation, firewall configuration, etc.)
-  can be added on top of the generated schemas.
+- SCP servers cannot be created or deleted through the SCP API; the
+  `netcup_scp_server` resource manages attributes of an existing server.
 
 ## Development
 
