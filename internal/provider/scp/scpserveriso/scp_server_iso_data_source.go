@@ -73,8 +73,8 @@ func (d *ScpServerIsoDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_iso": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_iso": arr}
 	}
 
 	schema := ScpServerIsoDataSourceSchema(ctx)

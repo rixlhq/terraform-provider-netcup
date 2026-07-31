@@ -73,8 +73,8 @@ func (d *ScpServerRescuesystemDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_rescuesystem": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_rescuesystem": arr}
 	}
 
 	schema := ScpServerRescuesystemDataSourceSchema(ctx)

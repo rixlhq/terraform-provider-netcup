@@ -73,8 +73,8 @@ func (d *ScpUserImagePartDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_user_image_part": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_user_image_part": arr}
 	}
 
 	schema := ScpUserImagePartDataSourceSchema(ctx)

@@ -73,8 +73,8 @@ func (d *ScpServerDiskSupportedDriversDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_disk_supported_drivers": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_disk_supported_drivers": arr}
 	}
 
 	schema := ScpServerDiskSupportedDriversDataSourceSchema(ctx)

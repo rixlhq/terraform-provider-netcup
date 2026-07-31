@@ -73,8 +73,8 @@ func (d *ScpUserSshKeysDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_user_ssh_keys": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_user_ssh_keys": arr}
 	}
 
 	schema := ScpUserSshKeysDataSourceSchema(ctx)

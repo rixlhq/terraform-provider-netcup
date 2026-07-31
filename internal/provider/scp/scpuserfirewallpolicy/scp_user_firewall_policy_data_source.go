@@ -73,8 +73,8 @@ func (d *ScpUserFirewallPolicyDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_user_firewall_policy": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_user_firewall_policy": arr}
 	}
 
 	schema := ScpUserFirewallPolicyDataSourceSchema(ctx)

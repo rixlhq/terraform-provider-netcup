@@ -60,7 +60,7 @@ func (d *ScpServerDataSource) Read(ctx context.Context, req datasource.ReadReque
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := fmt.Sprintf("/api/v1/servers/%s", strconv.FormatInt(data.ServerId.ValueInt64(), 10))
+	path := "/api/v1/servers/" + strconv.FormatInt(data.ServerId.ValueInt64(), 10)
 	query := url.Values{}
 	if !data.LoadServerLiveInfo.IsNull() && !data.LoadServerLiveInfo.IsUnknown() {
 		query.Set("loadServerLiveInfo", strconv.FormatBool(data.LoadServerLiveInfo.ValueBool()))
@@ -78,8 +78,8 @@ func (d *ScpServerDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server": arr}
 	}
 
 	schema := ScpServerDataSourceSchema(ctx)

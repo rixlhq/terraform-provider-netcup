@@ -73,8 +73,8 @@ func (d *ScpServerGuestAgentStatusDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_guest_agent_status": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_guest_agent_status": arr}
 	}
 
 	schema := ScpServerGuestAgentStatusDataSourceSchema(ctx)

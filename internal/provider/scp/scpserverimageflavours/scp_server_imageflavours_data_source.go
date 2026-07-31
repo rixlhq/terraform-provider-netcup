@@ -73,8 +73,8 @@ func (d *ScpServerImageflavoursDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_imageflavours": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_imageflavours": arr}
 	}
 
 	schema := ScpServerImageflavoursDataSourceSchema(ctx)

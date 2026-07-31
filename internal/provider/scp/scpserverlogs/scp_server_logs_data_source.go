@@ -81,8 +81,8 @@ func (d *ScpServerLogsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_logs": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_logs": arr}
 	}
 
 	schema := ScpServerLogsDataSourceSchema(ctx)

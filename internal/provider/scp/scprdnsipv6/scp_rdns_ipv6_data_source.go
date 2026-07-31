@@ -58,7 +58,7 @@ func (d *ScpRdnsIpv6DataSource) Read(ctx context.Context, req datasource.ReadReq
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := fmt.Sprintf("/api/v1/rdns/ipv6/%s", data.Ip.ValueString())
+	path := "/api/v1/rdns/ipv6/" + data.Ip.ValueString()
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {
@@ -72,8 +72,8 @@ func (d *ScpRdnsIpv6DataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_rdns_ipv6": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_rdns_ipv6": arr}
 	}
 
 	schema := ScpRdnsIpv6DataSourceSchema(ctx)

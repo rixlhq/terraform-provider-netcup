@@ -81,8 +81,8 @@ func (d *ScpUserFailoveripsV4DataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_user_failoverips_v4": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_user_failoverips_v4": arr}
 	}
 
 	schema := ScpUserFailoveripsV4DataSourceSchema(ctx)

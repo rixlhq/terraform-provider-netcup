@@ -73,8 +73,8 @@ func (d *ScpServerIsoimagesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_isoimages": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_isoimages": arr}
 	}
 
 	schema := ScpServerIsoimagesDataSourceSchema(ctx)

@@ -73,8 +73,8 @@ func (d *ScpServerSnapshotDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_server_snapshot": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_server_snapshot": arr}
 	}
 
 	schema := ScpServerSnapshotDataSourceSchema(ctx)

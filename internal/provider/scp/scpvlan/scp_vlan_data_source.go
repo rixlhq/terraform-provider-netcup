@@ -59,7 +59,7 @@ func (d *ScpVlanDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := fmt.Sprintf("/api/v1/vlans/%s", strconv.FormatInt(data.VlanId.ValueInt64(), 10))
+	path := "/api/v1/vlans/" + strconv.FormatInt(data.VlanId.ValueInt64(), 10)
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {
@@ -73,8 +73,8 @@ func (d *ScpVlanDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_vlan": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_vlan": arr}
 	}
 
 	schema := ScpVlanDataSourceSchema(ctx)

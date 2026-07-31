@@ -1,15 +1,16 @@
-package scpservers
+package scpservers_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpservers"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
 )
 
 func TestJSONToTfValueServers(t *testing.T) {
 	ctx := context.Background()
-	schema := ScpServersDataSourceSchema(ctx)
+	schema := scpservers.ScpServersDataSourceSchema(ctx)
 	tfType := schema.Type().TerraformType(ctx)
 
 	body := []byte(`[
@@ -22,8 +23,8 @@ func TestJSONToTfValueServers(t *testing.T) {
 		t.Fatalf("decode: %v", err)
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_servers": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_servers": arr}
 	}
 
 	_, err = scpcommon.JSONToTfValue(ctx, tfType, jsonVal)
