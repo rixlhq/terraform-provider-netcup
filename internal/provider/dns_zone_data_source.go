@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/rixlhq/terraform-provider-netcup/internal/client"
+	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
 var _ datasource.DataSource = &DNSZoneDataSource{}
@@ -16,6 +17,7 @@ var _ datasource.DataSource = &DNSZoneDataSource{}
 // DNSZoneDataSource reads the settings of a netcup DNS zone.
 type DNSZoneDataSource struct {
 	client *client.Client
+	scp    *scpclient.Client
 }
 
 type dnsZoneDataSourceModel struct {
@@ -77,16 +79,17 @@ func (d *DNSZoneDataSource) Configure(ctx context.Context, req datasource.Config
 		return
 	}
 
-	c, ok := req.ProviderData.(*client.Client)
+	data, ok := req.ProviderData.(*providerData)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData),
+			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
 		)
 		return
 	}
 
-	d.client = c
+	d.client = data.CCP
+	d.scp = data.SCP
 }
 
 func (d *DNSZoneDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

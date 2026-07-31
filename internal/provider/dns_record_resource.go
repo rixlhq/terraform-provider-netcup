@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/rixlhq/terraform-provider-netcup/internal/client"
+	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
 var _ resource.Resource = &DNSRecordResource{}
@@ -21,6 +22,7 @@ var _ resource.ResourceWithImportState = &DNSRecordResource{}
 // DNSRecordResource manages a single DNS record in a netcup zone.
 type DNSRecordResource struct {
 	client *client.Client
+	scp    *scpclient.Client
 }
 
 type dnsRecordResourceModel struct {
@@ -86,16 +88,17 @@ func (r *DNSRecordResource) Configure(ctx context.Context, req resource.Configur
 		return
 	}
 
-	c, ok := req.ProviderData.(*client.Client)
+	data, ok := req.ProviderData.(*providerData)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData),
+			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
 		)
 		return
 	}
 
-	r.client = c
+	r.client = data.CCP
+	r.scp = data.SCP
 }
 
 func (r *DNSRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

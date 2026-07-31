@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/rixlhq/terraform-provider-netcup/internal/client"
+	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
 var _ resource.Resource = &DNSZoneResource{}
@@ -19,6 +20,7 @@ var _ resource.ResourceWithImportState = &DNSZoneResource{}
 // DNSZoneResource manages the TTL of an existing netcup DNS zone.
 type DNSZoneResource struct {
 	client *client.Client
+	scp    *scpclient.Client
 }
 
 type dnsZoneResourceModel struct {
@@ -83,16 +85,17 @@ func (r *DNSZoneResource) Configure(ctx context.Context, req resource.ConfigureR
 		return
 	}
 
-	c, ok := req.ProviderData.(*client.Client)
+	data, ok := req.ProviderData.(*providerData)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T", req.ProviderData),
+			fmt.Sprintf("Expected *providerData, got: %T", req.ProviderData),
 		)
 		return
 	}
 
-	r.client = c
+	r.client = data.CCP
+	r.scp = data.SCP
 }
 
 func (r *DNSZoneResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
