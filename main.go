@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider"
+	providerversion "github.com/rixlhq/terraform-provider-netcup/internal/version"
 )
 
 var (
@@ -15,6 +16,9 @@ var (
 )
 
 func main() {
+	if version == "" || version == "dev" {
+		version = providerversion.Version
+	}
 	var debug bool
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
