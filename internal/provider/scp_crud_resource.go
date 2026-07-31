@@ -428,8 +428,10 @@ func overlayKnown(base, response tftypes.Value) tftypes.Value {
 }
 
 // applyIdFromAttr copies the value of a source attribute (e.g. "ip") into the
-// computed "id" attribute when the API response does not include an id. This lets
-// Terraform identify resources whose natural key is a path parameter.
+// computed "id" attribute when the API response does not include an id. The value
+// is first looked up in the API response, then in the base request value so
+// resources whose natural key is only returned by the API (e.g. interface mac)
+// still get a stable Terraform id.
 func (r *scpCrudResource) applyIdFromAttr(base, v tftypes.Value) tftypes.Value {
 	if r.spec.idFromAttr == "" {
 		return v
@@ -450,12 +452,24 @@ func (r *scpCrudResource) applyIdFromAttr(base, v tftypes.Value) tftypes.Value {
 		return v
 	}
 
-	baseObj := make(map[string]tftypes.Value)
-	if base.IsKnown() && !base.IsNull() {
-		_ = base.As(&baseObj)
+	srcVal := tftypes.NewValue(objType.AttributeTypes[r.spec.idFromAttr], nil)
+	if v.IsKnown() && !v.IsNull() {
+		if respObj, ok := obj[r.spec.idFromAttr]; ok && respObj.IsKnown() && !respObj.IsNull() {
+			srcVal = respObj
+		}
 	}
-	srcVal, ok := baseObj[r.spec.idFromAttr]
-	if !ok || !srcVal.IsKnown() || srcVal.IsNull() {
+
+	if !srcVal.IsKnown() || srcVal.IsNull() {
+		baseObj := make(map[string]tftypes.Value)
+		if base.IsKnown() && !base.IsNull() {
+			_ = base.As(&baseObj)
+		}
+		if b, ok := baseObj[r.spec.idFromAttr]; ok && b.IsKnown() && !b.IsNull() {
+			srcVal = b
+		}
+	}
+
+	if !srcVal.IsKnown() || srcVal.IsNull() {
 		return v
 	}
 
