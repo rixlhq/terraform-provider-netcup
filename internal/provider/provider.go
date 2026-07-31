@@ -145,6 +145,9 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewScpServerSnapshotResource,
 		NewScpRdnsResource,
 		NewScpUserFirewallPolicyResource,
+		NewScpFailoverIpV4Resource,
+		NewScpFailoverIpV6Resource,
+		NewScpUserVlanResource,
 		NewScpTaskActionResource,
 	}
 }

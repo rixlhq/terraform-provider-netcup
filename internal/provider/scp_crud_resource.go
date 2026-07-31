@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -39,6 +40,16 @@ type scpCrudResourceSpec struct {
 	idFromAttr    string
 	createReadsBack bool
 	updateReadsBack bool
+	// noDelete removes the resource from state without calling an API endpoint.
+	// Use for update-only resources that cannot be deleted (e.g. VLANs).
+	noDelete bool
+	// readFromList indicates the read endpoint returns an array and the resource
+	// state must be located inside that array. listSearchConfigAttr is the
+	// Terraform attribute name to match; listSearchResponseAttr is the matching
+	// field in each list item.
+	readFromList         bool
+	listSearchConfigAttr string
+	listSearchResponseAttr string
 }
 
 // scpCrudResource is a generic Terraform resource backed by one SCP REST
@@ -218,6 +229,11 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 }
 
 func (r *scpCrudResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	if r.spec.noDelete {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	if r.client == nil {
 		resp.Diagnostics.AddError("Missing SCP Client", "Configure the provider with scp_access_token or scp_refresh_token to use this resource.")
 		return
@@ -252,7 +268,83 @@ func (r *scpCrudResource) readState(ctx context.Context, base tftypes.Value, tfT
 	if err != nil {
 		return tftypes.Value{}, fmt.Errorf("scp api read: %w", err)
 	}
+
+	if r.spec.readFromList {
+		return r.responseFromList(ctx, base, tfType, readBody)
+	}
 	return r.responseToState(ctx, tfType, readBody)
+}
+
+func (r *scpCrudResource) responseFromList(ctx context.Context, base tftypes.Value, tfType tftypes.Type, body []byte) (tftypes.Value, error) {
+	decoded, err := scpcommon.DecodeJSONResponse(body)
+	if err != nil {
+		return tftypes.Value{}, err
+	}
+	list, ok := decoded.([]interface{})
+	if !ok {
+		return tftypes.Value{}, fmt.Errorf("expected list response for readFromList")
+	}
+
+	searchVal, err := r.valueAsStringByAttr(base, r.spec.listSearchConfigAttr)
+	if err != nil {
+		return tftypes.Value{}, fmt.Errorf("search value: %w", err)
+	}
+
+	responseAttr := r.spec.listSearchResponseAttr
+	if responseAttr == "" {
+		responseAttr = r.spec.listSearchConfigAttr
+	}
+
+	for _, item := range list {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		candidate, ok := m[responseAttr]
+		if !ok {
+			continue
+		}
+		if jsonValueAsString(candidate) != searchVal {
+			continue
+		}
+
+		itemJSON, err := json.Marshal(m)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return r.responseToState(ctx, tfType, itemJSON)
+	}
+
+	return tftypes.Value{}, fmt.Errorf("list item with %s=%s not found", responseAttr, searchVal)
+}
+
+func (r *scpCrudResource) valueAsStringByAttr(v tftypes.Value, attr string) (string, error) {
+	obj, err := r.asObject(v)
+	if err != nil {
+		return "", err
+	}
+	val, ok := obj[attr]
+	if !ok {
+		return "", fmt.Errorf("missing attribute %q", attr)
+	}
+	return r.valueAsString(val)
+}
+
+func jsonValueAsString(v interface{}) string {
+	switch t := v.(type) {
+	case string:
+		return t
+	case float64:
+		n := big.NewFloat(t)
+		return n.Text('f', 0)
+	case int64:
+		return strconv.FormatInt(t, 10)
+	case int:
+		return strconv.FormatInt(int64(t), 10)
+	case bool:
+		return strconv.FormatBool(t)
+	}
+	return fmt.Sprintf("%v", v)
 }
 
 func (r *scpCrudResource) doRequest(ctx context.Context, method, path string, body []byte) ([]byte, error) {
