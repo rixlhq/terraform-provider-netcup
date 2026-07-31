@@ -140,6 +140,8 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 	return []func() resource.Resource{
 		NewDNSRecordResource,
 		NewDNSZoneResource,
+		NewScpServerResource,
+		NewScpServerActionResource,
 	}
 }
 
