@@ -8,16 +8,43 @@ description: |
 
 ## Required toolchain
 
-- Go 1.26.5 at `/usr/local/go/bin/go` (the system `go` is too old).
-- Terraform CLI. The HashiCorp apt package on this box reports `v1.15.8` but behaves unreliably with dev overrides; download a known-good Linux amd64 binary (e.g. `1.9.8`) and run it from `/tmp/tf-bin/terraform`.
-- Python 3 for the mock SCP API.
+The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, GoReleaser, golangci-lint, and `tfplugindocs`.
+
+If mise is not on `PATH`, it was installed for this session at `~/.local/bin/mise`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+The system `go` (`/usr/bin/go`) and `terraform` (`/usr/bin/terraform`) are too old and should not be used. Mise installs the correct versions via `mise.toml`.
+
+## Run the CI checks
+
+```bash
+mise run ci
+```
+
+This runs `fmt-check`, `vet`, `build`, `test`, and `lint`.
 
 ## Build the provider binary
 
 ```bash
-export PATH=/usr/local/go/bin:$PATH
-CGO_ENABLED=0 go build -o /tmp/terraform-provider-netcup .
+mise run build
 ```
+
+The binary is produced at the module root (`terraform-provider-netcup`). To place it in `/tmp`:
+
+```bash
+CGO_ENABLED=0 mise exec -- go build -o /tmp/terraform-provider-netcup .
+```
+
+## Generate Terraform Registry docs
+
+```bash
+mise run docs
+```
+
+`git diff --stat` should be empty after generation.
 
 ## Configure Terraform to use the local binary
 
@@ -33,6 +60,12 @@ provider_installation {
 ```
 
 Important: when dev overrides are active, `terraform init` may fail to resolve the provider version from the registry. You can skip `terraform init` entirely and run `terraform plan`/`apply` directly against the local binary.
+
+Use the mise-managed Terraform binary. Because the system `/usr/bin/terraform` may shadow the mise shim in this environment, use the direct install path:
+
+```bash
+~/.local/share/mise/installs/terraform/1.9.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+```
 
 ## Start a local mock SCP API
 
@@ -70,11 +103,11 @@ Run with:
 
 ```bash
 export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
-/tmp/tf-bin/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+~/.local/share/mise/installs/terraform/1.9.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
 ## Common gotchas
 
 - The SCP OpenAPI spec returns camelCase keys; the provider schema is snake_case. If any computed field (e.g. `ipv4addresses`, `server_live_info`, `max_cpu_count`) is `null`, the key-mapping helper in `internal/provider/scpcommon/helpers.go` is not normalizing keys.
-- `go build`, `go vet`, and `go test ./...` should all be run with `/usr/local/go/bin/go` and pass.
+- `mise run ci` should be used instead of raw `go` / `gofmt` / `golangci-lint` to get the correct tool versions.
 - Do not run actions against the real netcup SCP API unless a real token is provided and the user explicitly approves destructive operations.
