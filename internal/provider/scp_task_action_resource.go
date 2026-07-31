@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -129,7 +130,7 @@ func (r *ScpTaskActionResource) Delete(ctx context.Context, req resource.DeleteR
 
 func (r *ScpTaskActionResource) execute(ctx context.Context, data *ScpTaskActionResourceModel) error {
 	if r.client == nil {
-		return fmt.Errorf("configure the provider with scp_access_token to use this resource")
+		return errors.New("configure the provider with scp_access_token to use this resource")
 	}
 
 	switch data.Action.ValueString() {
