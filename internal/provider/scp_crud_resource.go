@@ -148,9 +148,12 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	plan := req.Plan.Raw
+	state := req.State.Raw
 	tfType := r.schema.Type().TerraformType(ctx)
 
-	path, err := r.buildPath(plan, r.spec.updatePath)
+	// Path parameters like the computed id are known from state, while the
+	// request body is built from the planned configuration.
+	path, err := r.buildPath(state, r.spec.updatePath)
 	if err != nil {
 		resp.Diagnostics.AddError("Path Error", err.Error())
 		return
@@ -183,7 +186,7 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 		// reading the resource back from the API.
 	}
 
-	readPath, err := r.buildPath(plan, r.spec.readPath)
+	readPath, err := r.buildPath(state, r.spec.readPath)
 	if err != nil {
 		resp.Diagnostics.AddError("Read Path Error", err.Error())
 		return
@@ -254,7 +257,10 @@ func (r *scpCrudResource) buildPath(v tftypes.Value, template string) (string, e
 	for _, attr := range r.spec.pathParams {
 		placeholder := "{" + attr + "}"
 		if !strings.Contains(path, placeholder) {
-			return "", fmt.Errorf("path template %q missing placeholder %q", template, placeholder)
+			// Not all methods use every path parameter (e.g. Create does not
+			// need a computed id). Skip placeholders that are absent from the
+			// template for this method.
+			continue
 		}
 		val, ok := obj[attr]
 		if !ok {
@@ -273,10 +279,11 @@ func (r *scpCrudResource) buildPath(v tftypes.Value, template string) (string, e
 func (r *scpCrudResource) buildBody(v tftypes.Value) ([]byte, error) {
 	exclude := make(map[string]bool, len(r.spec.pathParams)+len(r.spec.bodyExclude))
 	for _, attr := range r.spec.pathParams {
-		exclude[attr] = true
+		// TfValueToJSON converts snake_case attribute names to camelCase JSON keys.
+		exclude[scpcommon.SnakeToCamel(attr)] = true
 	}
 	for _, attr := range r.spec.bodyExclude {
-		exclude[attr] = true
+		exclude[scpcommon.SnakeToCamel(attr)] = true
 	}
 
 	converted, err := scpcommon.TfValueToJSON(context.Background(), v)
@@ -316,11 +323,14 @@ func (r *scpCrudResource) responseToState(ctx context.Context, tfType tftypes.Ty
 			}
 			next, ok := m[part]
 			if !ok {
-				return tftypes.Value{}, fmt.Errorf("response missing root field %q", part)
+				// Some methods return the resource directly while others wrap it.
+				// Fall back to the top-level response when the configured root is
+				// not present.
+				return scpcommon.JSONToTfValue(ctx, tfType, decoded)
 			}
 			m, ok = next.(map[string]interface{})
 			if !ok {
-				return tftypes.Value{}, fmt.Errorf("response root %q is not an object", part)
+				return scpcommon.JSONToTfValue(ctx, tfType, decoded)
 			}
 		}
 		decoded = m
