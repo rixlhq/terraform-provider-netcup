@@ -8,7 +8,7 @@ description: |
 
 ## Required toolchain
 
-The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, golangci-lint, lefthook, and `tfplugindocs`.
+The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, golangci-lint, lefthook, `goreleaser`, and `tfplugindocs`. `mise.toml` currently pins `terraform = "1.15.8"` and `goreleaser = "2.17.1"`.
 
 If mise is not on `PATH`, it was installed for this session at `~/.local/bin/mise`:
 
@@ -24,7 +24,7 @@ The system `go` (`/usr/bin/go`) and `terraform` (`/usr/bin/terraform`) are too o
 mise run
 ```
 
-This runs `fmt`, `build`, `test`, and `lint` locally. CI uses `actions/setup-go@v7`,
+This runs `fmt`, `build`, `test`, and `lint` locally. For acceptance tests run `mise run testacc` (or `TF_ACC=1 go test -timeout=120m ./internal/provider/...`). CI uses `actions/setup-go@v7`,
 `golangci/golangci-lint-action@v9`, and `goreleaser/goreleaser-action` instead of mise.
 
 ## Build the provider binary
@@ -47,6 +47,14 @@ mise run docs
 
 `git diff --stat` should be empty after generation.
 
+## Snapshot release build
+
+```bash
+mise exec -- goreleaser build --snapshot --clean
+```
+
+Artifacts land in `dist/`. Confirm `dist/terraform-provider-netcup_windows_arm64_v8.0/` is produced.
+
 ## Configure Terraform to use the local binary
 
 Create `/tmp/tftest/terraform.rc`:
@@ -65,7 +73,7 @@ Important: when dev overrides are active, `terraform init` may fail to resolve t
 Use the mise-managed Terraform binary. Because the system `/usr/bin/terraform` may shadow the mise shim in this environment, use the direct install path:
 
 ```bash
-~/.local/share/mise/installs/terraform/1.9.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
 ## Start a local mock SCP API
@@ -104,7 +112,7 @@ Run with:
 
 ```bash
 export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
-~/.local/share/mise/installs/terraform/1.9.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
 ## Common gotchas
@@ -113,3 +121,4 @@ export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
 - Local checks can be run with `mise run`; CI uses `actions/setup-go@v7` and the
   official GitHub Actions for `golangci-lint` and `GoReleaser` instead of mise.
 - Do not run actions against the real netcup SCP API unless a real token is provided and the user explicitly approves destructive operations.
+- `mise run testacc` runs acceptance tests with the local mock SCP server; no real credentials are needed for `TestAccScpRdns_basic`.
