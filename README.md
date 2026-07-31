@@ -389,9 +389,9 @@ consume.
 - `terraform-registry-manifest.json` declares protocol version `6.0`.
 - `.goreleaser.yml` builds cross-platform archives, a SHA256 checksum file, a
 detached GPG signature, and renames the manifest to the required asset name.
-- `.github/workflows/release.yml` runs on `v*` tags, uses
-  `actions/setup-go@v7` and the `goreleaser/goreleaser-action`, imports a GPG
-  key, and creates the release.
+- `.github/workflows/ci.yml` runs lint, test, and build in parallel on every
+  push and pull request, then runs `goreleaser/goreleaser-action` to create a
+  signed release only on `v*` tags after CI passes.
 
 To publish:
 1. Generate a GPG signing key and add the public key to the Terraform Registry.
