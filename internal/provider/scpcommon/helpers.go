@@ -5,10 +5,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
+
+var (
+	lowerToUpperReg        = regexp.MustCompile(`([a-z])[A-Z]`)
+	unsupportedCharsReg    = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
+	leadingNumbersReg      = regexp.MustCompile(`^(\d+)`)
+)
+
+// TerraformIdentifier converts a name to the snake_case form used by the Terraform code generator.
+func TerraformIdentifier(original string) string {
+	if len(original) == 0 {
+		return original
+	}
+	removed := unsupportedCharsReg.ReplaceAllString(original, "")
+	noLeading := leadingNumbersReg.ReplaceAllString(removed, "")
+	inserted := lowerToUpperReg.ReplaceAllStringFunc(noLeading, func(s string) string {
+		firstRune, size := utf8.DecodeRuneInString(s)
+		return fmt.Sprintf("%s_%s", string(firstRune), strings.ToLower(s[size:]))
+	})
+	return strings.ToLower(inserted)
+}
 
 // DecodeJSONResponse decodes JSON using json.Number to preserve numeric precision.
 func DecodeJSONResponse(body []byte) (interface{}, error) {
@@ -58,9 +80,17 @@ func JSONToTfValue(ctx context.Context, t tftypes.Type, v interface{}) (tftypes.
 		if !ok {
 			return tftypes.Value{}, fmt.Errorf("expected object for type %s, got %T", t, v)
 		}
+		// The generated Terraform schemas use snake_case attribute names, while
+		// the SCP API returns camelCase keys. Build a lookup that preserves the
+		// original values (including map keys) but normalizes only this object's
+		// attribute names.
+		normalized := make(map[string]interface{}, len(m))
+		for k, val := range m {
+			normalized[TerraformIdentifier(k)] = val
+		}
 		vals := make(map[string]tftypes.Value, len(ty.AttributeTypes))
 		for attr, attrType := range ty.AttributeTypes {
-			attrVal, ok := m[attr]
+			attrVal, ok := normalized[attr]
 			if !ok {
 				vals[attr] = tftypes.NewValue(attrType, nil)
 				continue

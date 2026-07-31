@@ -62,6 +62,11 @@ func (c *Client) Post(ctx context.Context, path string, body []byte) ([]byte, er
 	return c.doWithRetry(ctx, http.MethodPost, path, nil, body)
 }
 
+// Put performs a PUT request against the SCP API and returns the response body.
+func (c *Client) Put(ctx context.Context, path string, body []byte) ([]byte, error) {
+	return c.doWithRetry(ctx, http.MethodPut, path, nil, body)
+}
+
 // Delete performs a DELETE request against the SCP API and returns the response body.
 func (c *Client) Delete(ctx context.Context, path string) ([]byte, error) {
 	return c.doWithRetry(ctx, http.MethodDelete, path, nil, nil)
@@ -116,7 +121,12 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}
 	if body != nil {
-		req.Header.Set("Content-Type", "application/merge-patch+json")
+		switch method {
+		case http.MethodPatch:
+			req.Header.Set("Content-Type", "application/merge-patch+json")
+		default:
+			req.Header.Set("Content-Type", "application/json")
+		}
 	}
 	req.Header.Set("Accept", "application/json")
 
