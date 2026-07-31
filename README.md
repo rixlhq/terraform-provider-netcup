@@ -389,8 +389,9 @@ consume.
 - `terraform-registry-manifest.json` declares protocol version `6.0`.
 - `.goreleaser.yml` builds cross-platform archives, a SHA256 checksum file, a
 detached GPG signature, and renames the manifest to the required asset name.
-- `.github/workflows/release.yml` runs on `v*` tags, imports a GPG key, and
-creates the release.
+- `.github/workflows/release.yml` runs on `v*` tags, uses
+  `actions/setup-go@v7` and the `goreleaser/goreleaser-action`, imports a GPG
+  key, and creates the release.
 
 To publish:
 1. Generate a GPG signing key and add the public key to the Terraform Registry.
@@ -403,19 +404,28 @@ To publish:
 ## Development
 
 This project uses [mise](https://mise.jdx.dev/) to manage tools and tasks. The
-`mise.toml` file pins Go, Terraform, GoReleaser, golangci-lint, and
-`tfplugindocs`.
+`mise.toml` file pins Go, Terraform, golangci-lint, lefthook, and `tfplugindocs`.
+[lefthook](https://github.com/evilmartians/lefthook) is configured for pre-commit
+and pre-push checks.
 
-Install tools:
+Install tools and set up git hooks:
 
 ```sh
 mise install
 ```
 
-Run the default local checks (format, vet, build, test):
+Run the default local checks (format, build, test, lint):
 
 ```sh
 mise run
+```
+
+Pre-commit and pre-push hooks run automatically after `mise install`. To run them
+manually:
+
+```sh
+lefthook run pre-commit
+lefthook run pre-push
 ```
 
 Build the provider:
@@ -452,11 +462,8 @@ Generate Terraform Registry docs:
 mise run docs
 ```
 
-Release locally with GoReleaser (requires a GPG key and `GITHUB_TOKEN`):
-
-```sh
-mise run release
-```
+Releases are built by the `goreleaser/goreleaser-action` in
+`.github/workflows/release.yml`.
 
 ## License
 

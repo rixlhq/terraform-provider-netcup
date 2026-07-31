@@ -8,7 +8,7 @@ description: |
 
 ## Required toolchain
 
-The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, GoReleaser, golangci-lint, and `tfplugindocs`.
+The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, golangci-lint, lefthook, and `tfplugindocs`.
 
 If mise is not on `PATH`, it was installed for this session at `~/.local/bin/mise`:
 
@@ -21,10 +21,11 @@ The system `go` (`/usr/bin/go`) and `terraform` (`/usr/bin/terraform`) are too o
 ## Run the CI checks
 
 ```bash
-mise run ci
+mise run
 ```
 
-This runs `fmt-check`, `vet`, `build`, `test`, and `lint`.
+This runs `fmt`, `build`, `test`, and `lint` locally. CI uses `actions/setup-go@v7`,
+`golangci/golangci-lint-action@v9`, and `goreleaser/goreleaser-action` instead of mise.
 
 ## Build the provider binary
 
@@ -109,5 +110,6 @@ export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
 ## Common gotchas
 
 - The SCP OpenAPI spec returns camelCase keys; the provider schema is snake_case. If any computed field (e.g. `ipv4addresses`, `server_live_info`, `max_cpu_count`) is `null`, the key-mapping helper in `internal/provider/scpcommon/helpers.go` is not normalizing keys.
-- `mise run ci` should be used instead of raw `go` / `gofmt` / `golangci-lint` to get the correct tool versions.
+- Local checks can be run with `mise run`; CI uses `actions/setup-go@v7` and the
+  official GitHub Actions for `golangci-lint` and `GoReleaser` instead of mise.
 - Do not run actions against the real netcup SCP API unless a real token is provided and the user explicitly approves destructive operations.
