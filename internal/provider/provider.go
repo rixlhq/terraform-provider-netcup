@@ -145,6 +145,7 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewScpServerSnapshotResource,
 		NewScpRdnsResource,
 		NewScpUserFirewallPolicyResource,
+		NewScpTaskActionResource,
 	}
 }
 
@@ -152,6 +153,7 @@ func (p *NetcupProvider) DataSources(ctx context.Context) []func() datasource.Da
 	sources := []func() datasource.DataSource{
 		NewDNSRecordsDataSource,
 		NewDNSZoneDataSource,
+		NewScpServerMetricsDataSource,
 	}
 	sources = append(sources, scp.DataSources()...)
 	return sources

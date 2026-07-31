@@ -66,12 +66,12 @@ func (r *ScpServerActionResource) Schema(ctx context.Context, req resource.Schem
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Action to execute. Supported: start, stop, reset, powercycle, suspend, rescue_activate, rescue_deactivate, iso_attach, iso_detach, snapshot_create, snapshot_revert, snapshot_export, snapshot_delete, snapshot_dryrun, disk_format, image_setup, user_image_setup, storage_optimize, firewall_reapply, firewall_restore.",
+				Description: "Action to execute. Supported: start, stop, reset, powercycle, suspend, rescue_activate, rescue_deactivate, iso_attach, iso_detach, snapshot_create, snapshot_revert, snapshot_export, snapshot_delete, snapshot_dryrun, disk_format, disk_driver_update, image_setup, user_image_setup, storage_optimize, firewall_reapply, firewall_restore.",
 			},
 			"arguments": schema.MapAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
-				Description: "String arguments used to build the request path or query, e.g. snapshot_name, disk_name, mac, state_option.",
+				Description: "String arguments used to build the request path or query, e.g. snapshot_name, disk_name, mac, state_option, driver.",
 			},
 			"body": schema.StringAttribute{
 				Optional:    true,
@@ -321,6 +321,11 @@ var actionSpecs = map[string]actionSpec{
 		path:        "/api/v1/servers/%d/disks/%s:format",
 		bodyBuilder: emptyBody,
 	},
+	"disk_driver_update": {
+		method:      "PATCH",
+		path:        "/api/v1/servers/%d/disks",
+		bodyBuilder: driverBody,
+	},
 	"image_setup": {
 		method:      "POST",
 		path:        "/api/v1/servers/%d/image",
@@ -366,6 +371,17 @@ func powerQuery(defaultOption string) func(map[string]string) url.Values {
 		}
 		return url.Values{"stateOption": []string{option}}
 	}
+}
+
+func driverBody(args map[string]string, body string) ([]byte, error) {
+	driver := body
+	if driver == "" {
+		driver = args["driver"]
+	}
+	if driver == "" {
+		return nil, fmt.Errorf("disk_driver_update requires a driver argument or body")
+	}
+	return json.Marshal(map[string]interface{}{"driver": driver})
 }
 
 func emptyBody(args map[string]string, body string) ([]byte, error) {
