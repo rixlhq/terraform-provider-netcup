@@ -49,7 +49,13 @@ type scpCrudResourceSpec struct {
 	readFromList           bool
 	listSearchConfigAttr   string
 	listSearchResponseAttr string
+	// importIDAttrs lists the top-level Terraform attribute names, in order,
+	// that make up the import ID. The ID is expected as a slash-separated string
+	// (e.g. "12345/67890"). If empty, the resource does not support import.
+	importIDAttrs []string
 }
+
+var _ resource.ResourceWithImportState = &scpCrudResource{}
 
 // scpCrudResource is a generic Terraform resource backed by one SCP REST
 // entity. It operates directly on tftypes.Value so it can reuse a generated

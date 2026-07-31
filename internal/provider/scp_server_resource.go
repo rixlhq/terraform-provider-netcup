@@ -15,7 +15,10 @@ import (
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
-var _ resource.Resource = &ScpServerResource{}
+var (
+	_ resource.Resource                = &ScpServerResource{}
+	_ resource.ResourceWithImportState = &ScpServerResource{}
+)
 
 // NewScpServerResource returns a resource that manages mutable attributes of an
 // existing netcup SCP server. The server itself cannot be created or deleted

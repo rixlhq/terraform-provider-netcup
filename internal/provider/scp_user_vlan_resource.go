@@ -25,6 +25,7 @@ func NewScpUserVlanResource() resource.Resource {
 			pathParams:      []string{attrUserID, "vlan_id"},
 			bodyExclude:     []string{attrUserID, "vlan_id", "id"},
 			idFromAttr:      "vlan_id",
+			importIDAttrs:   []string{attrUserID, "vlan_id"},
 		},
 	}
 }

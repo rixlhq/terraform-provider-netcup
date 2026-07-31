@@ -26,6 +26,7 @@ func NewScpFailoverIpV4Resource() resource.Resource {
 			listSearchConfigAttr:   attrFailoverIPID,
 			listSearchResponseAttr: "id",
 			idFromAttr:             attrFailoverIPID,
+			importIDAttrs:          []string{attrUserID, attrFailoverIPID},
 		},
 	}
 }

@@ -85,18 +85,19 @@ var scpUserFirewallPolicySchema = schema.Schema{
 }
 
 var scpUserFirewallPolicySpec = scpCrudResourceSpec{
-	typeName:     "scp_user_firewall_policy",
-	createPath:   "/api/v1/users/{user_id}/firewall-policies",
-	readPath:     "/api/v1/users/{user_id}/firewall-policies/{id}",
-	updatePath:   "/api/v1/users/{user_id}/firewall-policies/{id}",
-	deletePath:   "/api/v1/users/{user_id}/firewall-policies/{id}",
-	createMethod: "POST",
-	readMethod:   "GET",
-	updateMethod: "PUT",
-	deleteMethod: methodDelete,
-	responseRoot: "firewallPolicy",
-	pathParams:   []string{attrUserID, "id"},
-	bodyExclude:  []string{attrUserID, "id"},
+	typeName:      "scp_user_firewall_policy",
+	createPath:    "/api/v1/users/{user_id}/firewall-policies",
+	readPath:      "/api/v1/users/{user_id}/firewall-policies/{id}",
+	updatePath:    "/api/v1/users/{user_id}/firewall-policies/{id}",
+	deletePath:    "/api/v1/users/{user_id}/firewall-policies/{id}",
+	createMethod:  "POST",
+	readMethod:    "GET",
+	updateMethod:  "PUT",
+	deleteMethod:  methodDelete,
+	responseRoot:  "firewallPolicy",
+	pathParams:    []string{attrUserID, "id"},
+	bodyExclude:   []string{attrUserID, "id"},
+	importIDAttrs: []string{attrUserID, "id"},
 }
 
 // NewScpUserFirewallPolicyResource returns a resource that manages netcup SCP

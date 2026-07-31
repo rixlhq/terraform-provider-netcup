@@ -26,6 +26,7 @@ func NewScpUserSshKeyResource() resource.Resource {
 			readFromList:           true,
 			listSearchConfigAttr:   "id",
 			listSearchResponseAttr: "id",
+			importIDAttrs:          []string{attrUserID, "id"},
 		},
 	}
 }

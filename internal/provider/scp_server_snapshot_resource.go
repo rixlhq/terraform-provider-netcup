@@ -123,6 +123,7 @@ var scpServerSnapshotSpec = scpCrudResourceSpec{
 	pathParams:      []string{attrServerID, "name"},
 	bodyExclude:     []string{attrServerID, "id", "uuid", "disks", "creation_time", "state", "online", "exported", "exported_size_in_ki_b", "download_infos"},
 	idFromAttr:      "name",
+	importIDAttrs:   []string{attrServerID, "name"},
 	createReadsBack: true,
 }
 

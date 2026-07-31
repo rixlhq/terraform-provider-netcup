@@ -96,16 +96,17 @@ var scpUserResourceSchema = schema.Schema{
 }
 
 var scpUserResourceSpec = scpCrudResourceSpec{
-	typeName:     "scp_user",
-	createPath:   "/api/v1/users/{user_id}",
-	readPath:     "/api/v1/users/{user_id}",
-	updatePath:   "/api/v1/users/{user_id}",
-	createMethod: "PUT",
-	readMethod:   "GET",
-	updateMethod: "PUT",
-	noDelete:     true,
-	pathParams:   []string{attrUserID},
-	bodyExclude:  []string{attrUserID, "id", "username", "firstname", "lastname", "email", "company"},
+	typeName:      "scp_user",
+	createPath:    "/api/v1/users/{user_id}",
+	readPath:      "/api/v1/users/{user_id}",
+	updatePath:    "/api/v1/users/{user_id}",
+	createMethod:  "PUT",
+	readMethod:    "GET",
+	updateMethod:  "PUT",
+	noDelete:      true,
+	pathParams:    []string{attrUserID},
+	bodyExclude:   []string{attrUserID, "id", "username", "firstname", "lastname", "email", "company"},
+	importIDAttrs: []string{attrUserID},
 }
 
 // NewScpUserResource returns an update-only resource for an SCP user account.

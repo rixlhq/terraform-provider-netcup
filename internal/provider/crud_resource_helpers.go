@@ -13,6 +13,57 @@ import (
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
 )
 
+func (r *scpCrudResource) buildImportState(_ context.Context, tfType tftypes.Type, parts []string) (tftypes.Value, error) {
+	objType, ok := tfType.(tftypes.Object)
+	if !ok {
+		return tftypes.Value{}, fmt.Errorf("expected object type, got %s", tfType)
+	}
+
+	vals := make(map[string]tftypes.Value, len(objType.AttributeTypes))
+	for attr, attrType := range objType.AttributeTypes {
+		vals[attr] = tftypes.NewValue(attrType, nil)
+	}
+
+	for i, attr := range r.spec.importIDAttrs {
+		attrType, ok := objType.AttributeTypes[attr]
+		if !ok {
+			return tftypes.Value{}, fmt.Errorf("unknown import attribute %q", attr)
+		}
+
+		v, err := parseImportValue(attrType, parts[i])
+		if err != nil {
+			return tftypes.Value{}, fmt.Errorf("import attribute %q: %w", attr, err)
+		}
+		vals[attr] = v
+	}
+
+	return tftypes.NewValue(tfType, vals), nil
+}
+
+func parseImportValue(t tftypes.Type, s string) (tftypes.Value, error) {
+	switch {
+	case t.Is(tftypes.String):
+		return tftypes.NewValue(t, s), nil
+	case t.Is(tftypes.Number):
+		if i, err := strconv.ParseInt(s, 10, 64); err == nil {
+			return tftypes.NewValue(t, i), nil
+		}
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(t, f), nil
+	case t.Is(tftypes.Bool):
+		b, err := strconv.ParseBool(s)
+		if err != nil {
+			return tftypes.Value{}, err
+		}
+		return tftypes.NewValue(t, b), nil
+	default:
+		return tftypes.Value{}, fmt.Errorf("unsupported import attribute type %s", t)
+	}
+}
+
 func (r *scpCrudResource) buildPath(v tftypes.Value, template string) (string, error) {
 	obj, err := r.asObject(v)
 	if err != nil {

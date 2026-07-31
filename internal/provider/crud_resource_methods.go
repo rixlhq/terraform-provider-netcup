@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -137,6 +139,42 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 	resp.State.Raw = overlayKnown(combined, apiStateVal)
+}
+
+func (r *scpCrudResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	if len(r.spec.importIDAttrs) == 0 {
+		resp.Diagnostics.AddError("Import Not Supported", fmt.Sprintf("Resource %q does not support import.", r.spec.typeName))
+		return
+	}
+
+	parts := strings.Split(req.ID, "/")
+	if len(parts) != len(r.spec.importIDAttrs) {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			fmt.Sprintf("Expected %d slash-separated part(s) (%s), got %q.", len(r.spec.importIDAttrs), strings.Join(r.spec.importIDAttrs, "/"), req.ID),
+		)
+		return
+	}
+
+	tfType := r.schema.Type().TerraformType(ctx)
+	importVal, err := r.buildImportState(ctx, tfType, parts)
+	if err != nil {
+		resp.Diagnostics.AddError("Import Error", err.Error())
+		return
+	}
+
+	apiStateVal, err := r.readState(ctx, importVal, tfType)
+	if err != nil {
+		if scpclient.IsNotFound(err) {
+			resp.Diagnostics.AddError("Import Not Found", err.Error())
+			return
+		}
+		resp.Diagnostics.AddError("SCP API Error", err.Error())
+		return
+	}
+
+	stateVal := overlayKnown(importVal, apiStateVal)
+	resp.State.Raw = r.applyIdFromAttr(importVal, stateVal)
 }
 
 func (r *scpCrudResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
