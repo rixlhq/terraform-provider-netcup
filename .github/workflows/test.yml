@@ -14,12 +14,45 @@ permissions:
   contents: read
 
 jobs:
-  ci:
-    name: CI
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: jdx/mise-action@v4
+      - uses: actions/setup-go@v7
         with:
-          install_args: "go golangci-lint"
-      - run: mise run ci
+          go-version-file: 'go.mod'
+      - run: go mod download
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          only-new-issues: true
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+      - run: go mod download
+      - run: go test -v -race ./...
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+      - run: go mod download
+      - name: GoReleaser build
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          args: build --snapshot --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
