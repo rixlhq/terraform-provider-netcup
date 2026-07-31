@@ -9,7 +9,7 @@ It supports both the **Customer Control Panel (CCP) DNS API** and the **Server C
 
 ## Requirements
 
-- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
+- [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0 (>= 1.10 for ephemeral resources, >= 1.8 for provider-defined functions)
 - [Go](https://go.dev/doc/install) >= 1.26
 - [mise](https://mise.jdx.dev/) (recommended for running tasks and installing tools)
 
@@ -41,6 +41,39 @@ provider "netcup" {
 
 CCP credentials are generated in the netcup Customer Control Panel under **Master Data > API**.
 SCP tokens are generated via the netcup SCP device-code OAuth flow.
+
+## Protocol Version 6 Features
+
+The provider is built on Terraform Plugin Framework protocol version 6 and exposes
+features that require newer Terraform CLI versions:
+
+- **Provider-defined functions** (`Terraform >= 1.8`):
+  `provider::netcup::ip_version(ip)` returns `ipv4` or `ipv6` for a given address.
+- **Ephemeral resources** (`Terraform >= 1.10`):
+  `netcup_scp_access_token` exchanges a refresh token for a short-lived access token
+  that is never stored in Terraform state or plan files.
+
+### `netcup_scp_access_token` ephemeral resource
+
+```hcl
+ephemeral "netcup_scp_access_token" "token" {
+  refresh_token = var.netcup_scp_refresh_token
+}
+
+provider "netcup" {
+  scp_access_token = ephemeral.netcup_scp_access_token.token.access_token
+}
+```
+
+### `provider::netcup::ip_version` function
+
+```hcl
+resource "netcup_scp_rdns" "example" {
+  ip_version = provider::netcup::ip_version("1.2.3.4")
+  ip         = "1.2.3.4"
+  rdns       = "host.example.com"
+}
+```
 
 ## CCP DNS Resources
 
