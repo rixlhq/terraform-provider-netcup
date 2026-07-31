@@ -1,5 +1,5 @@
 data "netcup_scp_user" "example" {
-  user_id = "me"
+  user_id = 12345
 }
 
 output "user_email" {

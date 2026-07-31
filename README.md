@@ -111,14 +111,48 @@ data "netcup_scp_servers" "all" {
   limit = 10
 }
 
-data "netcup_scp_user" "me" {
-  user_id = "me"
+data "netcup_scp_user" "example" {
+  user_id = 12345
 }
 ```
 
 All SCP `GET` endpoints are available as data sources with names derived from
 their path, e.g. `netcup_scp_server_interfaces`, `netcup_scp_server_snapshots`,
 `netcup_scp_rdns_ipv4`, `netcup_scp_tasks`, `netcup_scp_user_images`, etc.
+
+### `netcup_scp_server_imageflavours` and `netcup_scp_server_isoimages`
+
+List the public image flavours and ISO images available to a server. These
+are used when calling `image_setup` or `iso_attach` actions.
+
+```hcl
+data "netcup_scp_server_imageflavours" "example" {
+  server_id = 12345
+}
+
+data "netcup_scp_server_isoimages" "example" {
+  server_id = 12345
+}
+```
+
+### `netcup_scp_user_images` and `netcup_scp_user_isos`
+
+List custom images and ISOs uploaded to the account. Use `key` in
+`user_image_setup` or `iso_attach` actions.
+
+```hcl
+data "netcup_scp_user" "example" {
+  user_id = 12345
+}
+
+data "netcup_scp_user_images" "example" {
+  user_id = data.netcup_scp_user.example.id
+}
+
+data "netcup_scp_user_isos" "example" {
+  user_id = data.netcup_scp_user.example.id
+}
+```
 
 ### `netcup_scp_server_metrics`
 
@@ -168,7 +202,8 @@ resource "netcup_scp_server" "example" {
 
 Trigger one-off server actions such as `start`, `stop`, `reset`, `powercycle`,
 `suspend`, `rescue_activate`, `snapshot_create`, `snapshot_revert`,
-`iso_attach`, `image_setup`, `disk_format`, `firewall_reapply`, and others.
+`iso_attach`, `image_setup`, `user_image_setup`, `disk_format`,
+`firewall_reapply`, and others.
 
 ```hcl
 resource "netcup_scp_server_action" "start" {
@@ -183,6 +218,42 @@ resource "netcup_scp_server_action" "snapshot" {
   body = jsonencode({
     name   = "before-upgrade"
     online = true
+  })
+}
+
+# Install a public image flavour.
+resource "netcup_scp_server_action" "image_setup" {
+  server_id = 12345
+  action    = "image_setup"
+
+  body = jsonencode({
+    imageFlavourId = 123
+    diskName       = "sda"
+    hostname       = "srv.example.com"
+    locale         = "en_US.UTF-8"
+    timezone       = "Europe/Berlin"
+  })
+}
+
+# Install a custom user image by key.
+resource "netcup_scp_server_action" "user_image_setup" {
+  server_id = 12345
+  action    = "user_image_setup"
+
+  body = jsonencode({
+    userImageName = "my-custom-image"
+    diskName      = "sda"
+  })
+}
+
+# Attach an ISO image.
+resource "netcup_scp_server_action" "iso_attach" {
+  server_id = 12345
+  action    = "iso_attach"
+
+  body = jsonencode({
+    isoId                   = 456
+    changeBootDeviceToCdrom = true
   })
 }
 ```
@@ -306,6 +377,27 @@ resource "netcup_scp_task_action" "cancel" {
   within an existing zone can be managed.
 - SCP servers, failover IPs and VLANs cannot be created or deleted through the
   SCP API. Use the corresponding resources to adopt and update existing objects.
+
+## Publishing to the Terraform Registry
+
+The repository is set up to publish releases that the Terraform Registry can
+consume.
+
+- The provider address is `registry.terraform.io/rixlhq/netcup`.
+- `main.go` injects the version at build time.
+- `terraform-registry-manifest.json` declares protocol version `6.0`.
+- `.goreleaser.yml` builds cross-platform archives, a SHA256 checksum file, a
+detached GPG signature, and renames the manifest to the required asset name.
+- `.github/workflows/release.yml` runs on `v*` tags, imports a GPG key, and
+creates the release.
+
+To publish:
+1. Generate a GPG signing key and add the public key to the Terraform Registry.
+2. Add the private key and passphrase as repository secrets named
+   `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE`.
+3. Create the provider in the Terraform Registry, point it at this GitHub
+   repository, and configure the webhook if needed.
+4. Push a semantic version tag such as `v0.1.0`.
 
 ## Development
 
