@@ -1,0 +1,87 @@
+package scp
+
+import (
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpmaintenance"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scprdnsipv4"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scprdnsipv6"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserver"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverdisk"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverdisksupporteddrivers"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverdisks"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpservergpudriver"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverguestagent"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverguestagentstatus"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverimageflavours"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverinterface"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverinterfaces"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserveriso"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverisoimages"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverlogs"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserverrescuesystem"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserversnapshot"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserversnapshots"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpservers"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scptask"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scptasks"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuser"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserfailoveripsv4"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserfailoveripsv6"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserfirewallpolicies"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserfirewallpolicy"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserimage"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserimagepart"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserimages"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuseriso"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserisopart"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserisos"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuserlogs"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpusersshkeys"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuservlan"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpuservlans"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpvlan"
+)
+
+// DataSources returns all SCP data sources implemented by this provider.
+func DataSources() []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		scpmaintenance.NewScpMaintenanceDataSource,
+		scprdnsipv4.NewScpRdnsIpv4DataSource,
+		scprdnsipv6.NewScpRdnsIpv6DataSource,
+		scpserver.NewScpServerDataSource,
+		scpserverdisk.NewScpServerDiskDataSource,
+		scpserverdisksupporteddrivers.NewScpServerDiskSupportedDriversDataSource,
+		scpserverdisks.NewScpServerDisksDataSource,
+		scpservergpudriver.NewScpServerGpuDriverDataSource,
+		scpserverguestagent.NewScpServerGuestAgentDataSource,
+		scpserverguestagentstatus.NewScpServerGuestAgentStatusDataSource,
+		scpserverimageflavours.NewScpServerImageflavoursDataSource,
+		scpserverinterface.NewScpServerInterfaceDataSource,
+		scpserverinterfaces.NewScpServerInterfacesDataSource,
+		scpserveriso.NewScpServerIsoDataSource,
+		scpserverisoimages.NewScpServerIsoimagesDataSource,
+		scpserverlogs.NewScpServerLogsDataSource,
+		scpserverrescuesystem.NewScpServerRescuesystemDataSource,
+		scpserversnapshot.NewScpServerSnapshotDataSource,
+		scpserversnapshots.NewScpServerSnapshotsDataSource,
+		scpservers.NewScpServersDataSource,
+		scptask.NewScpTaskDataSource,
+		scptasks.NewScpTasksDataSource,
+		scpuser.NewScpUserDataSource,
+		scpuserfailoveripsv4.NewScpUserFailoveripsV4DataSource,
+		scpuserfailoveripsv6.NewScpUserFailoveripsV6DataSource,
+		scpuserfirewallpolicies.NewScpUserFirewallPoliciesDataSource,
+		scpuserfirewallpolicy.NewScpUserFirewallPolicyDataSource,
+		scpuserimage.NewScpUserImageDataSource,
+		scpuserimagepart.NewScpUserImagePartDataSource,
+		scpuserimages.NewScpUserImagesDataSource,
+		scpuseriso.NewScpUserIsoDataSource,
+		scpuserisopart.NewScpUserIsoPartDataSource,
+		scpuserisos.NewScpUserIsosDataSource,
+		scpuserlogs.NewScpUserLogsDataSource,
+		scpusersshkeys.NewScpUserSshKeysDataSource,
+		scpuservlan.NewScpUserVlanDataSource,
+		scpuservlans.NewScpUserVlansDataSource,
+		scpvlan.NewScpVlanDataSource,
+	}
+}
