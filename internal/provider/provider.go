@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -15,7 +17,11 @@ import (
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
-var _ provider.Provider = &NetcupProvider{}
+var (
+	_ provider.Provider                       = &NetcupProvider{}
+	_ provider.ProviderWithFunctions          = &NetcupProvider{}
+	_ provider.ProviderWithEphemeralResources = &NetcupProvider{}
+)
 
 // NetcupProvider implements the netcup Terraform provider.
 type NetcupProvider struct {
@@ -43,7 +49,7 @@ func (p *NetcupProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *NetcupProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Terraform provider for managing netcup CCP DNS and SCP resources.",
+		MarkdownDescription: "Terraform provider for managing netcup CCP DNS and SCP resources. Supports provider-defined functions and ephemeral resources when using protocol version 6.0.",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				MarkdownDescription: "Netcup API key generated in the Customer Control Panel for the CCP/DNS API.",
@@ -177,6 +183,18 @@ func (p *NetcupProvider) DataSources(ctx context.Context) []func() datasource.Da
 	)
 	sources = append(sources, scp.DataSources()...)
 	return sources
+}
+
+func (p *NetcupProvider) Functions(_ context.Context) []func() function.Function {
+	return []func() function.Function{
+		NewIPVersionFunction,
+	}
+}
+
+func (p *NetcupProvider) EphemeralResources(_ context.Context) []func() ephemeral.EphemeralResource {
+	return []func() ephemeral.EphemeralResource{
+		NewScpAccessTokenEphemeralResource,
+	}
 }
 
 // New returns a factory for the netcup provider.
