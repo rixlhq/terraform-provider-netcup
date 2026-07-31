@@ -22,8 +22,8 @@ func NewScpUserVlanResource() resource.Resource {
 			createReadsBack: true,
 			updateReadsBack: true,
 			noDelete:        true,
-			pathParams:      []string{"user_id", "vlan_id"},
-			bodyExclude:     []string{"user_id", "vlan_id", "id"},
+			pathParams:      []string{attrUserID, "vlan_id"},
+			bodyExclude:     []string{attrUserID, "vlan_id", "id"},
 			idFromAttr:      "vlan_id",
 		},
 	}
@@ -33,7 +33,7 @@ func userVlanResourceSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Updates the name of an existing netcup SCP user VLAN. VLANs cannot be created or deleted through the API.",
 		Attributes: map[string]schema.Attribute{
-			"user_id": schema.Int64Attribute{
+			attrUserID: schema.Int64Attribute{
 				MarkdownDescription: "ID of the user that owns the VLAN.",
 				Required:            true,
 				PlanModifiers: []planmodifier.Int64{

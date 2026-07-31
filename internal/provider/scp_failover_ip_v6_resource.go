@@ -19,13 +19,13 @@ func NewScpFailoverIpV6Resource() resource.Resource {
 			updatePath:             "/api/v1/users/{user_id}/failoverips/v6/{failover_ip_id}",
 			createMethod:           "PATCH",
 			updateMethod:           "PATCH",
-			pathParams:             []string{"user_id", "failover_ip_id"},
-			bodyExclude:            []string{"user_id", "failover_ip_id", "network_prefix", "network_prefix_length", "id", "editable"},
+			pathParams:             []string{attrUserID, attrFailoverIPID},
+			bodyExclude:            []string{attrUserID, attrFailoverIPID, "network_prefix", "network_prefix_length", "id", "editable"},
 			noDelete:               true,
 			readFromList:           true,
-			listSearchConfigAttr:   "failover_ip_id",
+			listSearchConfigAttr:   attrFailoverIPID,
 			listSearchResponseAttr: "id",
-			idFromAttr:             "failover_ip_id",
+			idFromAttr:             attrFailoverIPID,
 		},
 	}
 }
@@ -34,21 +34,21 @@ func failoverIpV6ResourceSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Routes an existing netcup SCP IPv6 failover IP to a server. Failover IPs are pre-allocated; this resource only updates the `server_id` routing.",
 		Attributes: map[string]schema.Attribute{
-			"user_id": schema.Int64Attribute{
+			attrUserID: schema.Int64Attribute{
 				MarkdownDescription: "ID of the user that owns the failover IP.",
 				Required:            true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
-			"failover_ip_id": schema.Int64Attribute{
+			attrFailoverIPID: schema.Int64Attribute{
 				MarkdownDescription: "ID of the failover IP to route.",
 				Required:            true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 			},
-			"server_id": schema.Int64Attribute{
+			attrServerID: schema.Int64Attribute{
 				MarkdownDescription: "ID of the server to route the failover IP to.",
 				Required:            true,
 			},

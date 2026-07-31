@@ -20,9 +20,9 @@ func NewScpUserSshKeyResource() resource.Resource {
 			deletePath:             "/api/v1/users/{user_id}/ssh-keys/{id}",
 			createMethod:           "POST",
 			readMethod:             "GET",
-			deleteMethod:           "DELETE",
-			pathParams:             []string{"user_id", "id"},
-			bodyExclude:            []string{"user_id", "id", "created_at"},
+			deleteMethod:           methodDelete,
+			pathParams:             []string{attrUserID, "id"},
+			bodyExclude:            []string{attrUserID, "id", "created_at"},
 			readFromList:           true,
 			listSearchConfigAttr:   "id",
 			listSearchResponseAttr: "id",
@@ -34,7 +34,7 @@ func userSshKeyResourceSchema() schema.Schema {
 	return schema.Schema{
 		MarkdownDescription: "Manages an SSH key for a netcup SCP user account. SSH keys cannot be updated in place; changing `name` or `key` replaces the resource.",
 		Attributes: map[string]schema.Attribute{
-			"user_id": schema.Int64Attribute{
+			attrUserID: schema.Int64Attribute{
 				MarkdownDescription: "ID of the user account that owns the SSH key.",
 				Required:            true,
 				PlanModifiers: []planmodifier.Int64{

@@ -41,7 +41,7 @@ func (d *ScpServerMetricsDataSource) Schema(ctx context.Context, req datasource.
 	resp.Schema = dschema.Schema{
 		MarkdownDescription: "Reads server metrics from the SCP REST API. The raw JSON response is returned so it can be parsed with terraform's jsondecode function.",
 		Attributes: map[string]dschema.Attribute{
-			"server_id": dschema.Int64Attribute{
+			attrServerID: dschema.Int64Attribute{
 				MarkdownDescription: "ID of the server to query metrics for.",
 				Required:            true,
 			},
@@ -96,7 +96,7 @@ func (d *ScpServerMetricsDataSource) Read(ctx context.Context, req datasource.Re
 	}
 	suffix, ok := metricPaths[data.Metric.ValueString()]
 	if !ok {
-		resp.Diagnostics.AddError("Invalid metric", fmt.Sprintf("metric must be one of cpu, disk, network or network_packet, got: %s", data.Metric.ValueString()))
+		resp.Diagnostics.AddError("Invalid metric", "metric must be one of cpu, disk, network or network_packet, got: "+data.Metric.ValueString())
 		return
 	}
 

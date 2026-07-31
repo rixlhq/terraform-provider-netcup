@@ -39,7 +39,7 @@ func NewScpRdnsResource() resource.Resource {
 			createMethod: "POST",
 			readMethod:   "GET",
 			updateMethod: "POST",
-			deleteMethod: "DELETE",
+			deleteMethod: methodDelete,
 			pathParams:   []string{"ip_version", "ip"},
 			bodyExclude:  []string{"ip_version", "id"},
 			idFromAttr:   "ip",
