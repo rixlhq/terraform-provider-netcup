@@ -3,10 +3,10 @@ package scptask
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
+	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
@@ -59,7 +59,6 @@ func (d *ScpTaskDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 	path := fmt.Sprintf("/api/v1/tasks/%s", data.Uuid.ValueString())
-
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

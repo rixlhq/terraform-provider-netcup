@@ -13,16 +13,16 @@ func NewScpUserResource() resource.Resource {
 	return &scpCrudResource{
 		schema: userResourceSchema(),
 		spec: scpCrudResourceSpec{
-			typeName:        "scp_user",
-			createPath:      "/api/v1/users/{user_id}",
-			readPath:        "/api/v1/users/{user_id}",
-			updatePath:      "/api/v1/users/{user_id}",
-			createMethod:    "PUT",
-			readMethod:      "GET",
-			updateMethod:    "PUT",
-			noDelete:        true,
-			pathParams:      []string{"user_id"},
-			bodyExclude:     []string{"user_id", "id", "username", "firstname", "lastname", "email", "company"},
+			typeName:     "scp_user",
+			createPath:   "/api/v1/users/{user_id}",
+			readPath:     "/api/v1/users/{user_id}",
+			updatePath:   "/api/v1/users/{user_id}",
+			createMethod: "PUT",
+			readMethod:   "GET",
+			updateMethod: "PUT",
+			noDelete:     true,
+			pathParams:   []string{"user_id"},
+			bodyExclude:  []string{"user_id", "id", "username", "firstname", "lastname", "email", "company"},
 		},
 	}
 }

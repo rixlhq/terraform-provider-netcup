@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
+	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
@@ -60,7 +60,6 @@ func (d *ScpUserFirewallPolicyDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 	path := fmt.Sprintf("/api/v1/users/%s/firewall-policies/%s", strconv.FormatInt(data.UserId.ValueInt64(), 10), strconv.FormatInt(data.Id.ValueInt64(), 10))
-
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

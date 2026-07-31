@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	lowerToUpperReg        = regexp.MustCompile(`([a-z])[A-Z]`)
-	unsupportedCharsReg    = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
-	leadingNumbersReg      = regexp.MustCompile(`^(\d+)`)
+	lowerToUpperReg     = regexp.MustCompile(`([a-z])[A-Z]`)
+	unsupportedCharsReg = regexp.MustCompile(`[^a-zA-Z0-9_]+`)
+	leadingNumbersReg   = regexp.MustCompile(`^(\d+)`)
 )
 
 // TerraformIdentifier converts a name to the snake_case form used by the Terraform code generator.

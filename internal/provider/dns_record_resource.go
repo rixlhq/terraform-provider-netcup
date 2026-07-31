@@ -113,7 +113,7 @@ func (r *DNSRecordResource) Create(ctx context.Context, req resource.CreateReque
 		resp.Diagnostics.AddError("Login Error", err.Error())
 		return
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	record := r.toClientRecord(data)
 	updatedSet, err := r.client.UpdateDnsRecords(ctx, sessionID, data.Zone.ValueString(), &client.DNSRecordSet{DNSRecords: []client.DNSRecord{record}})
@@ -144,7 +144,7 @@ func (r *DNSRecordResource) Read(ctx context.Context, req resource.ReadRequest, 
 		resp.Diagnostics.AddError("Login Error", err.Error())
 		return
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	set, err := r.client.InfoDnsRecords(ctx, sessionID, data.Zone.ValueString())
 	if err != nil {
@@ -175,7 +175,7 @@ func (r *DNSRecordResource) Update(ctx context.Context, req resource.UpdateReque
 		resp.Diagnostics.AddError("Login Error", err.Error())
 		return
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	record := r.toClientRecord(data)
 	record.ID = data.ID.ValueString()
@@ -209,7 +209,7 @@ func (r *DNSRecordResource) Delete(ctx context.Context, req resource.DeleteReque
 		resp.Diagnostics.AddError("Login Error", err.Error())
 		return
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	record := r.toClientRecord(data)
 	record.ID = data.ID.ValueString()

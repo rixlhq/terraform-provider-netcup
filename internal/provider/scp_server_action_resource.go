@@ -179,7 +179,7 @@ func (r *ScpServerActionResource) execute(ctx context.Context, data *ScpServerAc
 	if spec.queryBuilder != nil {
 		query = spec.queryBuilder(args)
 	}
-	if query != nil && len(query) > 0 {
+	if len(query) > 0 {
 		path = path + "?" + query.Encode()
 	}
 

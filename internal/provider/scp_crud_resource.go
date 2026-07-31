@@ -25,19 +25,19 @@ import (
 // createReadsBack and updateReadsBack force a GET after POST/PUT because some
 // SCP endpoints return a task or an empty body rather than the resource object.
 type scpCrudResourceSpec struct {
-	typeName      string
-	createPath    string
-	readPath      string
-	updatePath    string
-	deletePath    string
-	createMethod  string
-	readMethod    string
-	updateMethod  string
-	deleteMethod  string
-	responseRoot  string
-	pathParams    []string
-	bodyExclude   []string
-	idFromAttr    string
+	typeName        string
+	createPath      string
+	readPath        string
+	updatePath      string
+	deletePath      string
+	createMethod    string
+	readMethod      string
+	updateMethod    string
+	deleteMethod    string
+	responseRoot    string
+	pathParams      []string
+	bodyExclude     []string
+	idFromAttr      string
 	createReadsBack bool
 	updateReadsBack bool
 	// noDelete removes the resource from state without calling an API endpoint.
@@ -47,8 +47,8 @@ type scpCrudResourceSpec struct {
 	// state must be located inside that array. listSearchConfigAttr is the
 	// Terraform attribute name to match; listSearchResponseAttr is the matching
 	// field in each list item.
-	readFromList         bool
-	listSearchConfigAttr string
+	readFromList           bool
+	listSearchConfigAttr   string
 	listSearchResponseAttr string
 }
 

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
-	
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
+	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 

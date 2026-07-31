@@ -3,10 +3,10 @@ package scpmaintenance
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
+	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
@@ -59,7 +59,6 @@ func (d *ScpMaintenanceDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 	path := "/api/v1/maintenance"
-
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

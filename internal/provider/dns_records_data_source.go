@@ -125,7 +125,7 @@ func (d *DNSRecordsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		resp.Diagnostics.AddError("Login Error", err.Error())
 		return
 	}
-	defer d.client.Logout(ctx, sessionID)
+	defer func() { _ = d.client.Logout(ctx, sessionID) }()
 
 	zone, err := d.client.InfoDnsZone(ctx, sessionID, data.DomainName.ValueString())
 	if err != nil {

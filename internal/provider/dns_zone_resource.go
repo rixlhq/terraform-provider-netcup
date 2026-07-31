@@ -163,7 +163,7 @@ func (r *DNSZoneResource) updateZone(ctx context.Context, data *dnsZoneResourceM
 	if err != nil {
 		return nil, err
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	zone := &client.DNSZone{
 		Name: data.DomainName.ValueString(),
@@ -178,7 +178,7 @@ func (r *DNSZoneResource) readZone(ctx context.Context, domainName string) (*cli
 	if err != nil {
 		return nil, err
 	}
-	defer r.client.Logout(ctx, sessionID)
+	defer func() { _ = r.client.Logout(ctx, sessionID) }()
 
 	return r.client.InfoDnsZone(ctx, sessionID, domainName)
 }
