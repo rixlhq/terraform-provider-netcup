@@ -21,20 +21,24 @@ import (
 // JSON response that contains the actual resource object (e.g. "firewallPolicy").
 // idFromAttr copies a known non-computed attribute (e.g. "ip" or "name") into
 // the computed "id" attribute for resources whose API response does not echo an id.
+// createReadsBack and updateReadsBack force a GET after POST/PUT because some
+// SCP endpoints return a task or an empty body rather than the resource object.
 type scpCrudResourceSpec struct {
-	typeName     string
-	createPath   string
-	readPath     string
-	updatePath   string
-	deletePath   string
-	createMethod string
-	readMethod   string
-	updateMethod string
-	deleteMethod string
-	responseRoot string
-	pathParams   []string
-	bodyExclude  []string
-	idFromAttr   string
+	typeName      string
+	createPath    string
+	readPath      string
+	updatePath    string
+	deletePath    string
+	createMethod  string
+	readMethod    string
+	updateMethod  string
+	deleteMethod  string
+	responseRoot  string
+	pathParams    []string
+	bodyExclude   []string
+	idFromAttr    string
+	createReadsBack bool
+	updateReadsBack bool
 }
 
 // scpCrudResource is a generic Terraform resource backed by one SCP REST
@@ -98,30 +102,18 @@ func (r *scpCrudResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	var apiStateVal tftypes.Value
-	if len(respBody) > 0 {
+	if len(respBody) > 0 && !r.spec.createReadsBack {
 		apiStateVal, err = r.responseToState(ctx, tfType, respBody)
 		if err == nil {
 			stateVal := overlayKnown(plan, apiStateVal)
 			resp.State.Raw = r.applyIdFromAttr(plan, stateVal)
 			return
 		}
-		// If the create response is empty, a task wrapper, or otherwise does not
-		// match the resource schema, read the resource back from the API.
 	}
 
-	readPath, err := r.buildPath(plan, r.spec.readPath)
-	if err != nil {
-		resp.Diagnostics.AddError("Read Path Error", err.Error())
-		return
-	}
-	readBody, err := r.doRequest(ctx, "GET", readPath, nil)
+	apiStateVal, err = r.readState(ctx, plan, tfType)
 	if err != nil {
 		resp.Diagnostics.AddError("SCP API Read Error", err.Error())
-		return
-	}
-	apiStateVal, err = r.responseToState(ctx, tfType, readBody)
-	if err != nil {
-		resp.Diagnostics.AddError("State Error", err.Error())
 		return
 	}
 	stateVal := overlayKnown(plan, apiStateVal)
@@ -208,31 +200,18 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	// Some updates return the resource object, others return a task wrapper.
 	var apiStateVal tftypes.Value
-	if len(respBody) > 0 {
+	if len(respBody) > 0 && !r.spec.updateReadsBack {
 		apiStateVal, err = r.responseToState(ctx, tfType, respBody)
 		if err == nil {
 			resp.State.Raw = overlayKnown(combined, apiStateVal)
 			return
 		}
-		// If the response does not match the resource schema, fall back to
-		// reading the resource back from the API.
 	}
 
-	readPath, err := r.buildPath(state, r.spec.readPath)
-	if err != nil {
-		resp.Diagnostics.AddError("Read Path Error", err.Error())
-		return
-	}
-	readBody, err := r.doRequest(ctx, "GET", readPath, nil)
+	apiStateVal, err = r.readState(ctx, combined, tfType)
 	if err != nil {
 		resp.Diagnostics.AddError("SCP API Read Error", err.Error())
-		return
-	}
-	apiStateVal, err = r.responseToState(ctx, tfType, readBody)
-	if err != nil {
-		resp.Diagnostics.AddError("State Error", err.Error())
 		return
 	}
 	resp.State.Raw = overlayKnown(combined, apiStateVal)
@@ -262,6 +241,18 @@ func (r *scpCrudResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	resp.State.RemoveResource(ctx)
+}
+
+func (r *scpCrudResource) readState(ctx context.Context, base tftypes.Value, tfType tftypes.Type) (tftypes.Value, error) {
+	path, err := r.buildPath(base, r.spec.readPath)
+	if err != nil {
+		return tftypes.Value{}, fmt.Errorf("read path: %w", err)
+	}
+	readBody, err := r.doRequest(ctx, "GET", path, nil)
+	if err != nil {
+		return tftypes.Value{}, fmt.Errorf("scp api read: %w", err)
+	}
+	return r.responseToState(ctx, tfType, readBody)
 }
 
 func (r *scpCrudResource) doRequest(ctx context.Context, method, path string, body []byte) ([]byte, error) {
