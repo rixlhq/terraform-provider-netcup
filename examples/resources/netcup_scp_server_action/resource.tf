@@ -25,3 +25,12 @@ resource "netcup_scp_server_action" "revert" {
     run = timestamp()
   }
 }
+
+resource "netcup_scp_server_action" "disk_driver" {
+  server_id = 12345
+  action    = "disk_driver_update"
+
+  body = jsonencode({
+    driver = "VIRTIO_SCSI"
+  })
+}

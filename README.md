@@ -120,6 +120,22 @@ All SCP `GET` endpoints are available as data sources with names derived from
 their path, e.g. `netcup_scp_server_interfaces`, `netcup_scp_server_snapshots`,
 `netcup_scp_rdns_ipv4`, `netcup_scp_tasks`, `netcup_scp_user_images`, etc.
 
+### `netcup_scp_server_metrics`
+
+Reads raw server metrics for `cpu`, `disk`, `network` or `network_packet`.
+
+```hcl
+data "netcup_scp_server_metrics" "cpu" {
+  server_id = 12345
+  metric    = "cpu"
+  hours     = 1
+}
+
+locals {
+  cpu_metrics = jsondecode(data.netcup_scp_server_metrics.cpu.json)
+}
+```
+
 ## SCP Resources
 
 ### `netcup_scp_server`
@@ -173,14 +189,123 @@ resource "netcup_scp_server_action" "snapshot" {
 
 Use the `triggers` map to force an action to run again when needed.
 
+### `netcup_scp_server_snapshot`
+
+Manages server snapshots.
+
+```hcl
+resource "netcup_scp_server_snapshot" "example" {
+  server_id = 12345
+  name      = "before-upgrade"
+  online    = true
+}
+```
+
+### `netcup_scp_rdns`
+
+Manages reverse DNS entries for IPv4 and IPv6.
+
+```hcl
+resource "netcup_scp_rdns" "example" {
+  ip_version = "ipv4"
+  ip         = "192.0.2.1"
+  hostname   = "srv.example.com"
+}
+```
+
+### `netcup_scp_user_firewall_policy`
+
+Manages account-level firewall policies.
+
+```hcl
+resource "netcup_scp_user_firewall_policy" "example" {
+  user_id = 12345
+  name    = "allow-ssh"
+
+  rules = [
+    {
+      action      = "ACCEPT"
+      direction   = "INGRESS"
+      protocol    = "TCP"
+      source_ports = "22"
+    }
+  ]
+}
+```
+
+### `netcup_scp_failover_ip_v4` / `netcup_scp_failover_ip_v6`
+
+Routes an existing failover IP to a server. Failover IPs cannot be created or
+deleted; only the `server_id` target can be changed.
+
+```hcl
+resource "netcup_scp_failover_ip_v4" "example" {
+  user_id        = 12345
+  failover_ip_id = 67890
+  server_id      = 54321
+}
+```
+
+### `netcup_scp_user_vlan`
+
+Updates the name of an existing user VLAN.
+
+```hcl
+resource "netcup_scp_user_vlan" "example" {
+  user_id = 12345
+  vlan_id = 67890
+  name    = "my-vlan"
+}
+```
+
+### `netcup_scp_user`
+
+Updates an existing SCP user account. Users cannot be created or deleted
+through the API; this resource adopts the user by `user_id`.
+
+```hcl
+resource "netcup_scp_user" "example" {
+  user_id   = 12345
+  language  = "en"
+  time_zone = "Europe/Berlin"
+
+  show_nickname     = true
+  passwordless_mode = false
+  secure_mode       = true
+}
+```
+
+### `netcup_scp_user_ssh_key`
+
+Manages SSH keys for an SCP user account.
+
+```hcl
+resource "netcup_scp_user_ssh_key" "example" {
+  user_id = 12345
+  name    = "my-key"
+  key     = "ssh-ed25519 AAAAC3NzaC... example"
+}
+```
+
+### `netcup_scp_task_action`
+
+Triggers one-off task actions. Currently only `cancel` is supported.
+
+```hcl
+resource "netcup_scp_task_action" "cancel" {
+  task_uuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  action    = "cancel"
+}
+```
+
 ## Limitations
 
 - Netcup does not support per-record TTLs; TTL is set per zone. Use
   `netcup_dns_zone` to change it.
 - Creating or deleting DNS zones is not supported by the CCP API; only records
   within an existing zone can be managed.
-- SCP servers cannot be created or deleted through the SCP API; the
-  `netcup_scp_server` resource manages attributes of an existing server.
+- SCP servers, failover IPs and VLANs cannot be created or deleted through the
+  SCP API. Use the corresponding resources to adopt and update existing objects.
 
 ## Development
 
