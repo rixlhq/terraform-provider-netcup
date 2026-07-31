@@ -1,6 +1,11 @@
 # Terraform Provider for Netcup
 
-A Terraform provider for managing DNS records and zones at [netcup](https://www.netcup.com) via the netcup Customer Control Panel (CCP) JSON API.
+A Terraform provider for managing resources at [netcup](https://www.netcup.com).
+It supports both the **Customer Control Panel (CCP) DNS API** and the **Server Control Panel (SCP) REST API**.
+
+- DNS records and zones are managed through the CCP JSON API.
+- Servers, networks, snapshots, ISOs, tasks, users, and other SCP resources are
+  exposed as data sources using the SCP OpenAPI specification.
 
 ## Requirements
 
@@ -8,6 +13,10 @@ A Terraform provider for managing DNS records and zones at [netcup](https://www.
 - [Go](https://go.dev/doc/install) >= 1.26
 
 ## Provider Configuration
+
+Configure the credentials for the APIs you want to use. CCP credentials are
+required for DNS resources, and an SCP access token is required for SCP data
+sources. Both can be configured at the same time.
 
 ```hcl
 terraform {
@@ -23,12 +32,16 @@ provider "netcup" {
   api_key         = "my-api-key"
   api_password    = "my-api-password"
   customer_number = "123456"
+
+  scp_access_token  = "my-bearer-token"
+  scp_refresh_token = "my-refresh-token" # optional, for automatic refresh
 }
 ```
 
-All credentials are generated in the netcup Customer Control Panel under **Master Data > API**.
+CCP credentials are generated in the netcup Customer Control Panel under **Master Data > API**.
+SCP tokens are generated via the netcup SCP device-code OAuth flow.
 
-## Resources
+## CCP DNS Resources
 
 ### `netcup_dns_record`
 
@@ -63,7 +76,7 @@ resource "netcup_dns_zone" "example" {
 }
 ```
 
-## Data Sources
+## CCP DNS Data Sources
 
 ### `netcup_dns_records`
 
@@ -85,12 +98,37 @@ data "netcup_dns_zone" "example" {
 }
 ```
 
+## SCP Data Sources
+
+The SCP data sources map the netcup SCP OpenAPI specification. Examples:
+
+```hcl
+data "netcup_scp_server" "example" {
+  server_id = 12345
+}
+
+data "netcup_scp_servers" "all" {
+  limit = 10
+}
+
+data "netcup_scp_user" "me" {
+  user_id = "me"
+}
+```
+
+All SCP `GET` endpoints are available as data sources with names derived from
+their path, e.g. `netcup_scp_server_interfaces`, `netcup_scp_server_snapshots`,
+`netcup_scp_rdns_ipv4`, `netcup_scp_tasks`, `netcup_scp_user_images`, etc.
+
 ## Limitations
 
 - Netcup does not support per-record TTLs; TTL is set per zone. Use
   `netcup_dns_zone` to change it.
 - Creating or deleting DNS zones is not supported by the CCP API; only records
   within an existing zone can be managed.
+- SCP resources are currently exposed as read-only data sources. Management
+  resources (server start/stop, snapshot creation, firewall configuration, etc.)
+  can be added on top of the generated schemas.
 
 ## Development
 
@@ -106,13 +144,20 @@ Run unit tests:
 go test ./...
 ```
 
-Run acceptance tests (requires a real netcup account and environment variables):
+Run CCP acceptance tests (requires a real netcup account and environment variables):
 
 ```sh
 NETCUP_CUSTOMER_NUMBER=... \
 NETCUP_API_KEY=... \
 NETCUP_API_PASSWORD=... \
 TF_ACC=1 go test ./...
+```
+
+Run SCP tests (read-only data sources):
+
+```sh
+NETCUP_SCP_ACCESS_TOKEN=... \
+TF_ACC=1 go test ./internal/provider/scp/...
 ```
 
 ## License

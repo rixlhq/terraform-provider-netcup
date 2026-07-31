@@ -11,4 +11,7 @@ provider "netcup" {
   api_key         = var.netcup_api_key
   api_password    = var.netcup_api_password
   customer_number = var.netcup_customer_number
+
+  scp_access_token  = var.netcup_scp_access_token
+  scp_refresh_token = var.netcup_scp_refresh_token
 }
