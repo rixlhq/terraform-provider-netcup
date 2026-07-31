@@ -1,9 +1,12 @@
 [tools]
 go = "1.26.5"
 terraform = "1.9.8"
-"ubi:goreleaser/goreleaser" = "2.17.1"
-"ubi:golangci/golangci-lint" = "2.12.0"
+golangci-lint = "2.12.2"
+lefthook = "2.1.10"
 "go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "v0.25.0"
+
+[hooks]
+postinstall = "lefthook install"
 
 [tasks.build]
 description = "Build the provider"
@@ -33,10 +36,6 @@ run = "gofmt -s -w -e ."
 description = "Check Go formatting"
 run = "gofmt -s -l -e ."
 
-[tasks.vet]
-description = "Run go vet"
-run = "go vet ./..."
-
 [tasks.lint]
 description = "Run golangci-lint"
 run = "golangci-lint run ./..."
@@ -45,25 +44,11 @@ run = "golangci-lint run ./..."
 description = "Generate Terraform Registry docs"
 run = "tfplugindocs generate"
 
-[tasks.release]
-description = "Build and release with GoReleaser"
-run = "goreleaser release --clean"
-
-[tasks.ci]
-description = "Run CI checks"
-run = [
-  { task = "fmt-check" },
-  { task = "vet" },
-  { task = "build" },
-  { task = "test" },
-  { task = "lint" },
-]
-
 [tasks.default]
 description = "Default local development check"
 run = [
   { task = "fmt" },
-  { task = "vet" },
   { task = "build" },
   { task = "test" },
+  { task = "lint" },
 ]
