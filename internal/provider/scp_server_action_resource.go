@@ -53,6 +53,7 @@ func (r *ScpServerActionResource) Metadata(ctx context.Context, req resource.Met
 
 func (r *ScpServerActionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Triggers one-off actions against an existing netcup SCP virtual server, such as start, stop, reset, snapshots, ISO attach, image setup, and disk driver updates.",
 		Attributes: map[string]schema.Attribute{
 			"server_id": schema.Int64Attribute{
 				Required: true,

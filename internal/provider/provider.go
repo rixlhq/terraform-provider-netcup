@@ -43,6 +43,7 @@ func (p *NetcupProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *NetcupProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Terraform provider for managing netcup CCP DNS and SCP resources.",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				MarkdownDescription: "Netcup API key generated in the Customer Control Panel for the CCP/DNS API.",

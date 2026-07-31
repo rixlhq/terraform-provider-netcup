@@ -54,6 +54,7 @@ func (r *ScpServerResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *ScpServerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages mutable attributes of an existing netcup SCP virtual server. Servers cannot be created or deleted through the SCP API; this resource adopts an existing server by `server_id` and applies patches.",
 		Attributes: map[string]schema.Attribute{
 			"server_id": schema.Int64Attribute{
 				Required: true,
