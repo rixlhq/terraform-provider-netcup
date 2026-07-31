@@ -100,7 +100,9 @@ func (r *scpCrudResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.State.Raw = stateVal
+	// Merge known plan values (e.g. required path parameters the API response
+	// does not echo, such as user_id) into the response state.
+	resp.State.Raw = overlayKnown(plan, stateVal)
 }
 
 func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -138,7 +140,9 @@ func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.State.Raw = stateVal
+	// Preserve path parameters and other known state values the API response
+	// does not include.
+	resp.State.Raw = overlayKnown(state, stateVal)
 }
 
 func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -151,9 +155,14 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 	state := req.State.Raw
 	tfType := r.schema.Type().TerraformType(ctx)
 
+	// Combine state and plan so that known configuration values (including
+	// the computed id and required path parameters) survive API responses
+	// that do not echo every attribute.
+	combined := overlayKnown(state, plan)
+
 	// Path parameters like the computed id are known from state, while the
 	// request body is built from the planned configuration.
-	path, err := r.buildPath(state, r.spec.updatePath)
+	path, err := r.buildPath(combined, r.spec.updatePath)
 	if err != nil {
 		resp.Diagnostics.AddError("Path Error", err.Error())
 		return
@@ -176,10 +185,11 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Some updates return the resource object, others return a task wrapper.
+	var apiStateVal tftypes.Value
 	if len(respBody) > 0 {
-		stateVal, err := r.responseToState(ctx, tfType, respBody)
+		apiStateVal, err = r.responseToState(ctx, tfType, respBody)
 		if err == nil {
-			resp.State.Raw = stateVal
+			resp.State.Raw = overlayKnown(combined, apiStateVal)
 			return
 		}
 		// If the response does not match the resource schema, fall back to
@@ -196,12 +206,12 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 		resp.Diagnostics.AddError("SCP API Read Error", err.Error())
 		return
 	}
-	stateVal, err := r.responseToState(ctx, tfType, readBody)
+	apiStateVal, err = r.responseToState(ctx, tfType, readBody)
 	if err != nil {
 		resp.Diagnostics.AddError("State Error", err.Error())
 		return
 	}
-	resp.State.Raw = stateVal
+	resp.State.Raw = overlayKnown(combined, apiStateVal)
 }
 
 func (r *scpCrudResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -352,6 +362,55 @@ func (r *scpCrudResource) asObject(v tftypes.Value) (map[string]tftypes.Value, e
 		return nil, err
 	}
 	return m, nil
+}
+
+// overlayKnown returns a new tftypes.Value of the same type as response,
+// replacing any null or unknown response attributes with the corresponding
+// known value from base. This is needed because SCP API responses often omit
+// path parameters (such as user_id) and other configured fields.
+func overlayKnown(base, response tftypes.Value) tftypes.Value {
+	if !response.IsKnown() || response.IsNull() {
+		if base.IsKnown() && !base.IsNull() {
+			return base
+		}
+		return response
+	}
+
+	t := response.Type()
+	switch ty := t.(type) {
+	case tftypes.Object:
+		respObj := make(map[string]tftypes.Value)
+		_ = response.As(&respObj)
+
+		baseObj := make(map[string]tftypes.Value)
+		if base.IsKnown() && !base.IsNull() {
+			_ = base.As(&baseObj)
+		}
+
+		vals := make(map[string]tftypes.Value, len(ty.AttributeTypes))
+		for attr, attrType := range ty.AttributeTypes {
+			respAttr, ok := respObj[attr]
+			if !ok || !respAttr.IsKnown() || respAttr.IsNull() {
+				if baseAttr, ok := baseObj[attr]; ok && baseAttr.IsKnown() && !baseAttr.IsNull() {
+					vals[attr] = baseAttr
+					continue
+				}
+				vals[attr] = tftypes.NewValue(attrType, nil)
+				continue
+			}
+
+			baseAttr := tftypes.NewValue(attrType, nil)
+			if b, ok := baseObj[attr]; ok {
+				baseAttr = b
+			}
+			vals[attr] = overlayKnown(baseAttr, respAttr)
+		}
+		return tftypes.NewValue(t, vals)
+	case tftypes.List, tftypes.Set, tftypes.Tuple, tftypes.Map:
+		return response
+	default:
+		return response
+	}
 }
 
 func (r *scpCrudResource) valueAsString(v tftypes.Value) (string, error) {
