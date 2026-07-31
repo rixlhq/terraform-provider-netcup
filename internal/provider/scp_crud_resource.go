@@ -140,29 +140,13 @@ func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state := req.State.Raw
 	tfType := r.schema.Type().TerraformType(ctx)
 
-	path, err := r.buildPath(state, r.spec.readPath)
-	if err != nil {
-		resp.Diagnostics.AddError("Path Error", err.Error())
-		return
-	}
-
-	method := r.spec.readMethod
-	if method == "" {
-		method = "GET"
-	}
-	respBody, err := r.doRequest(ctx, method, path, nil)
+	apiStateVal, err := r.readState(ctx, state, tfType)
 	if err != nil {
 		if scpclient.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
-		return
-	}
-
-	apiStateVal, err := r.responseToState(ctx, tfType, respBody)
-	if err != nil {
-		resp.Diagnostics.AddError("State Error", err.Error())
 		return
 	}
 
