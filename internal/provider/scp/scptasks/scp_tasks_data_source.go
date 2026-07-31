@@ -49,18 +49,7 @@ func (d *ScpTasksDataSource) Configure(ctx context.Context, req datasource.Confi
 	d.client = pd.SCP
 }
 
-func (d *ScpTasksDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ScpTasksModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if d.client == nil {
-		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
-		return
-	}
-	path := "/api/v1/tasks"
+func scpTasksQuery(data ScpTasksModel) url.Values {
 	query := url.Values{}
 	if !data.Limit.IsNull() && !data.Limit.IsUnknown() {
 		query.Set("limit", strconv.FormatInt(data.Limit.ValueInt64(), 10))
@@ -77,8 +66,21 @@ func (d *ScpTasksDataSource) Read(ctx context.Context, req datasource.ReadReques
 	if !data.State.IsNull() && !data.State.IsUnknown() {
 		query.Set("state", data.State.ValueString())
 	}
+	return query
+}
 
-	body, err := d.client.Get(ctx, path, query)
+func (d *ScpTasksDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data ScpTasksModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if d.client == nil {
+		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
+		return
+	}
+	body, err := d.client.Get(ctx, "/api/v1/tasks", scpTasksQuery(data))
 	if err != nil {
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
 		return
@@ -90,8 +92,8 @@ func (d *ScpTasksDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	if arr, ok := jsonVal.([]interface{}); ok {
-		jsonVal = map[string]interface{}{"scp_tasks": arr}
+	if arr, ok := jsonVal.([]any); ok {
+		jsonVal = map[string]any{"scp_tasks": arr}
 	}
 
 	schema := ScpTasksDataSourceSchema(ctx)

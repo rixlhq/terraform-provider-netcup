@@ -88,42 +88,13 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	var ccpClient *client.Client
-	hasCCP := !data.APIKey.IsNull() && !data.APIPassword.IsNull() && !data.CustomerNumber.IsNull()
-	if hasCCP {
-		endpoint := ""
-		if !data.Endpoint.IsNull() && !data.Endpoint.IsUnknown() {
-			endpoint = data.Endpoint.ValueString()
-		}
-
-		c, err := client.New(
-			data.CustomerNumber.ValueString(),
-			data.APIKey.ValueString(),
-			data.APIPassword.ValueString(),
-			endpoint,
-			nil,
-		)
-		if err != nil {
-			resp.Diagnostics.AddError("CCP Client Configuration Error", err.Error())
-			return
-		}
-		ccpClient = c
+	ccpClient, hasCCP, err := newCCPClient(data)
+	if err != nil {
+		resp.Diagnostics.AddError("CCP Client Configuration Error", err.Error())
+		return
 	}
 
-	var scpClient *scpclient.Client
-	hasSCP := !data.SCPAccessToken.IsNull()
-	if hasSCP {
-		baseURL := ""
-		if !data.SCPBaseURL.IsNull() && !data.SCPBaseURL.IsUnknown() {
-			baseURL = data.SCPBaseURL.ValueString()
-		}
-		scpClient = scpclient.New(
-			data.SCPAccessToken.ValueString(),
-			data.SCPRefreshToken.ValueString(),
-			baseURL,
-			nil,
-		)
-	}
+	scpClient, hasSCP := newSCPClient(data)
 
 	if !hasCCP && !hasSCP {
 		resp.Diagnostics.AddError(
@@ -135,6 +106,48 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	resp.DataSourceData = &providerData{CCP: ccpClient, SCP: scpClient}
 	resp.ResourceData = &providerData{CCP: ccpClient, SCP: scpClient}
+}
+
+func newCCPClient(data NetcupProviderModel) (*client.Client, bool, error) {
+	hasCCP := !data.APIKey.IsNull() && !data.APIPassword.IsNull() && !data.CustomerNumber.IsNull()
+	if !hasCCP {
+		return nil, false, nil
+	}
+
+	endpoint := ""
+	if !data.Endpoint.IsNull() && !data.Endpoint.IsUnknown() {
+		endpoint = data.Endpoint.ValueString()
+	}
+
+	c, err := client.New(
+		data.CustomerNumber.ValueString(),
+		data.APIKey.ValueString(),
+		data.APIPassword.ValueString(),
+		endpoint,
+		nil,
+	)
+	if err != nil {
+		return nil, true, err
+	}
+	return c, true, nil
+}
+
+func newSCPClient(data NetcupProviderModel) (*scpclient.Client, bool) {
+	hasSCP := !data.SCPAccessToken.IsNull()
+	if !hasSCP {
+		return nil, false
+	}
+
+	baseURL := ""
+	if !data.SCPBaseURL.IsNull() && !data.SCPBaseURL.IsUnknown() {
+		baseURL = data.SCPBaseURL.ValueString()
+	}
+	return scpclient.New(
+		data.SCPAccessToken.ValueString(),
+		data.SCPRefreshToken.ValueString(),
+		baseURL,
+		nil,
+	), true
 }
 
 func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resource {
@@ -156,11 +169,12 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 }
 
 func (p *NetcupProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	sources := []func() datasource.DataSource{
+	sources := make([]func() datasource.DataSource, 0, 3+len(scp.DataSources()))
+	sources = append(sources,
 		NewDNSRecordsDataSource,
 		NewDNSZoneDataSource,
 		NewScpServerMetricsDataSource,
-	}
+	)
 	sources = append(sources, scp.DataSources()...)
 	return sources
 }

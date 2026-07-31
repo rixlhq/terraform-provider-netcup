@@ -1,4 +1,4 @@
-package scpserver
+package scpserver_test
 
 import (
 	"context"
@@ -6,34 +6,57 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scp/scpserver"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
 )
 
+var scpServerJSONBody = []byte(`{
+	"id": 123,
+	"name": "myserver",
+	"hostname": "srv.example.com",
+	"disabled": false,
+	"serverId": 123,
+	"maxCpuCount": 8,
+	"snapshotCount": 2,
+	"gpuDriverAvailable": true,
+	"ipv4Addresses": [
+		{"id": 1, "ip": "1.2.3.4", "gateway": "1.2.3.1", "netmask": "255.255.255.0", "broadcast": "1.2.3.255"}
+	],
+	"serverLiveInfo": {
+		"state": "RUNNING",
+		"disks": [],
+		"cpuUsageInPercent": 12.5
+	}
+}`)
+
 func TestJSONToTfValueServer(t *testing.T) {
 	ctx := context.Background()
-	schema := ScpServerDataSourceSchema(ctx)
+	obj := decodeServerBody(t, ctx)
+
+	assertServerString(t, obj, "name", "myserver")
+	assertServerString(t, obj, "hostname", "srv.example.com")
+	assertServerNumber(t, obj, "max_cpu_count", "8")
+	assertServerNumber(t, obj, "snapshot_count", "2")
+	assertServerBool(t, obj, "gpu_driver_available", true)
+
+	var liveInfo map[string]tftypes.Value
+	if err := obj["server_live_info"].As(&liveInfo); err != nil {
+		t.Fatalf("server_live_info as object: %v", err)
+	}
+	assertServerString(t, liveInfo, "state", "RUNNING")
+
+	var ipv4 []tftypes.Value
+	if err := obj["ipv4addresses"].As(&ipv4); err != nil || len(ipv4) != 1 {
+		t.Fatalf("expected one ipv4address, got %d (%v)", len(ipv4), err)
+	}
+}
+
+func decodeServerBody(t *testing.T, ctx context.Context) map[string]tftypes.Value {
+	t.Helper()
+	schema := scpserver.ScpServerDataSourceSchema(ctx)
 	tfType := schema.Type().TerraformType(ctx)
 
-	body := []byte(`{
-		"id": 123,
-		"name": "myserver",
-		"hostname": "srv.example.com",
-		"disabled": false,
-		"serverId": 123,
-		"maxCpuCount": 8,
-		"snapshotCount": 2,
-		"gpuDriverAvailable": true,
-		"ipv4Addresses": [
-			{"id": 1, "ip": "1.2.3.4", "gateway": "1.2.3.1", "netmask": "255.255.255.0", "broadcast": "1.2.3.255"}
-		],
-		"serverLiveInfo": {
-			"state": "RUNNING",
-			"disks": [],
-			"cpuUsageInPercent": 12.5
-		}
-	}`)
-
-	jsonVal, err := scpcommon.DecodeJSONResponse(body)
+	jsonVal, err := scpcommon.DecodeJSONResponse(scpServerJSONBody)
 	if err != nil {
 		t.Fatalf("decode: %v", err)
 	}
@@ -47,44 +70,29 @@ func TestJSONToTfValueServer(t *testing.T) {
 	if err := tfVal.As(&obj); err != nil {
 		t.Fatalf("as object: %v", err)
 	}
+	return obj
+}
 
-	var name string
-	if err := obj["name"].As(&name); err != nil || name != "myserver" {
-		t.Fatalf("expected name=myserver, got %q (%v)", name, err)
+func assertServerString(t *testing.T, obj map[string]tftypes.Value, attr, want string) {
+	t.Helper()
+	var got string
+	if err := obj[attr].As(&got); err != nil || got != want {
+		t.Fatalf("expected %s=%q, got %q (%v)", attr, want, got, err)
 	}
+}
 
-	var hostname string
-	if err := obj["hostname"].As(&hostname); err != nil || hostname != "srv.example.com" {
-		t.Fatalf("expected hostname=srv.example.com, got %q (%v)", hostname, err)
+func assertServerNumber(t *testing.T, obj map[string]tftypes.Value, attr, want string) {
+	t.Helper()
+	var got big.Float
+	if err := obj[attr].As(&got); err != nil || got.String() != want {
+		t.Fatalf("expected %s=%s, got %s (%v)", attr, want, got.String(), err)
 	}
+}
 
-	var maxCPU big.Float
-	if err := obj["max_cpu_count"].As(&maxCPU); err != nil || maxCPU.String() != "8" {
-		t.Fatalf("expected max_cpu_count=8, got %s (%v)", maxCPU.String(), err)
-	}
-
-	var snapshotCount big.Float
-	if err := obj["snapshot_count"].As(&snapshotCount); err != nil || snapshotCount.String() != "2" {
-		t.Fatalf("expected snapshot_count=2, got %s (%v)", snapshotCount.String(), err)
-	}
-
-	var gpuAvailable bool
-	if err := obj["gpu_driver_available"].As(&gpuAvailable); err != nil || !gpuAvailable {
-		t.Fatalf("expected gpu_driver_available=true, got %v (%v)", gpuAvailable, err)
-	}
-
-	var liveInfo map[string]tftypes.Value
-	if err := obj["server_live_info"].As(&liveInfo); err != nil {
-		t.Fatalf("server_live_info as object: %v", err)
-	}
-
-	var state string
-	if err := liveInfo["state"].As(&state); err != nil || state != "RUNNING" {
-		t.Fatalf("expected server_live_info.state=RUNNING, got %q (%v)", state, err)
-	}
-
-	var ipv4 []tftypes.Value
-	if err := obj["ipv4addresses"].As(&ipv4); err != nil || len(ipv4) != 1 {
-		t.Fatalf("expected one ipv4address, got %d (%v)", len(ipv4), err)
+func assertServerBool(t *testing.T, obj map[string]tftypes.Value, attr string, want bool) {
+	t.Helper()
+	var got bool
+	if err := obj[attr].As(&got); err != nil || got != want {
+		t.Fatalf("expected %s=%v, got %v (%v)", attr, want, got, err)
 	}
 }
