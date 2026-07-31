@@ -174,8 +174,11 @@ func (r *ScpServerActionResource) execute(ctx context.Context, data *ScpServerAc
 		return err
 	}
 
-	query := spec.queryBuilder(args)
-	if query != nil {
+	query := url.Values{}
+	if spec.queryBuilder != nil {
+		query = spec.queryBuilder(args)
+	}
+	if query != nil && len(query) > 0 {
 		path = path + "?" + query.Encode()
 	}
 
