@@ -11,6 +11,7 @@ It supports both the **Customer Control Panel (CCP) DNS API** and the **Server C
 
 - [Terraform](https://developer.hashicorp.com/terraform/downloads) >= 1.0
 - [Go](https://go.dev/doc/install) >= 1.26
+- [mise](https://mise.jdx.dev/) (recommended for running tasks and installing tools)
 
 ## Provider Configuration
 
@@ -401,16 +402,32 @@ To publish:
 
 ## Development
 
+This project uses [mise](https://mise.jdx.dev/) to manage tools and tasks. The
+`mise.toml` file pins Go, Terraform, GoReleaser, golangci-lint, and
+`tfplugindocs`.
+
+Install tools:
+
+```sh
+mise install
+```
+
+Run the default local checks (format, vet, build, test):
+
+```sh
+mise run
+```
+
 Build the provider:
 
 ```sh
-go build ./...
+mise run build
 ```
 
 Run unit tests:
 
 ```sh
-go test ./...
+mise run test
 ```
 
 Run CCP acceptance tests (requires a real netcup account and environment variables):
@@ -419,14 +436,26 @@ Run CCP acceptance tests (requires a real netcup account and environment variabl
 NETCUP_CUSTOMER_NUMBER=... \
 NETCUP_API_KEY=... \
 NETCUP_API_PASSWORD=... \
-TF_ACC=1 go test ./...
+mise run testacc
 ```
 
 Run SCP tests (read-only data sources):
 
 ```sh
 NETCUP_SCP_ACCESS_TOKEN=... \
-TF_ACC=1 go test ./internal/provider/scp/...
+mise run testacc ./internal/provider/scp/...
+```
+
+Generate Terraform Registry docs:
+
+```sh
+mise run docs
+```
+
+Release locally with GoReleaser (requires a GPG key and `GITHUB_TOKEN`):
+
+```sh
+mise run release
 ```
 
 ## License
