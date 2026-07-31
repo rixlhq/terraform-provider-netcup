@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,22 @@ import (
 	"sync"
 	"time"
 )
+
+// APIError is returned when the SCP API responds with a non-2xx status code.
+type APIError struct {
+	StatusCode int
+	Body       string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("scp API error %d: %s", e.StatusCode, e.Body)
+}
+
+// IsNotFound reports whether err is an APIError with HTTP 404 status.
+func IsNotFound(err error) bool {
+	var apiErr *APIError
+	return errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound
+}
 
 const defaultBaseURL = "https://www.servercontrolpanel.de/scp-core"
 const tokenURL = "https://www.servercontrolpanel.de/realms/scp/protocol/openid-connect/token"
@@ -89,7 +106,7 @@ func (c *Client) doWithRetry(ctx context.Context, method, path string, query url
 	}
 
 	if status >= 400 {
-		return nil, fmt.Errorf("scp API error %d: %s", status, string(bodyBytes))
+		return nil, &APIError{StatusCode: status, Body: string(bodyBytes)}
 	}
 
 	return bodyBytes, nil

@@ -246,3 +246,128 @@ func dynamicJSONToTfValue(ctx context.Context, v interface{}) (tftypes.Value, er
 		return tftypes.Value{}, fmt.Errorf("unsupported dynamic value type %T", val)
 	}
 }
+
+// knownAcronyms are short lowercase tokens that should remain lowercase when
+// converting snake_case Terraform identifiers back to camelCase JSON keys.
+// They are used by SnakeToCamel to split tokens like "ipv4addresses" into
+// "ipv4" and "addresses" before title-casing the trailing part.
+var knownAcronyms = []string{"ipv4", "ipv6", "rdns"}
+
+// SnakeToCamel converts a snake_case Terraform attribute name to a lowerCamelCase
+// JSON key. It understands the same acronym tokens that TerraformIdentifier
+// does not split on its own, so "ipv4addresses" becomes "ipv4Addresses" and
+// "source_ports" becomes "sourcePorts".
+func SnakeToCamel(s string) string {
+	if s == "" {
+		return s
+	}
+	for _, ac := range knownAcronyms {
+		if strings.HasPrefix(strings.ToLower(s), ac) && len(s) > len(ac) {
+			next := s[len(ac)]
+			if (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z') {
+				s = ac + "_" + s[len(ac):]
+			}
+		}
+	}
+	parts := strings.Split(s, "_")
+	for i, p := range parts {
+		if i == 0 {
+			parts[i] = strings.ToLower(p)
+			continue
+		}
+		if p == "" {
+			continue
+		}
+		parts[i] = strings.ToUpper(p[:1]) + strings.ToLower(p[1:])
+	}
+	return strings.Join(parts, "")
+}
+
+// TfValueToJSON converts a tftypes.Value into a Go value that can be JSON
+// marshaled. Object attribute names are converted from snake_case to camelCase
+// using SnakeToCamel. Unknown and null values are omitted so they are not sent
+// in request bodies. Numbers are returned as json.Number to preserve precision.
+func TfValueToJSON(ctx context.Context, v tftypes.Value) (interface{}, error) {
+	if v.IsNull() || !v.IsKnown() {
+		return nil, nil
+	}
+
+	t := v.Type()
+	if t.Is(tftypes.String) {
+		var s string
+		if err := v.As(&s); err != nil {
+			return nil, err
+		}
+		return s, nil
+	}
+	if t.Is(tftypes.Bool) {
+		var b bool
+		if err := v.As(&b); err != nil {
+			return nil, err
+		}
+		return b, nil
+	}
+	if t.Is(tftypes.Number) {
+		var n big.Float
+		if err := v.As(&n); err != nil {
+			return nil, err
+		}
+		return json.Number(n.Text('f', -1)), nil
+	}
+
+	switch t.(type) {
+	case tftypes.Object:
+		var m map[string]tftypes.Value
+		if err := v.As(&m); err != nil {
+			return nil, err
+		}
+		out := make(map[string]interface{}, len(m))
+		for k, elem := range m {
+			converted, err := TfValueToJSON(ctx, elem)
+			if err != nil {
+				return nil, err
+			}
+			if converted == nil {
+				continue
+			}
+			out[SnakeToCamel(k)] = converted
+		}
+		return out, nil
+	case tftypes.List, tftypes.Set, tftypes.Tuple:
+		var l []tftypes.Value
+		if err := v.As(&l); err != nil {
+			return nil, err
+		}
+		out := make([]interface{}, 0, len(l))
+		for _, elem := range l {
+			converted, err := TfValueToJSON(ctx, elem)
+			if err != nil {
+				return nil, err
+			}
+			if converted == nil {
+				continue
+			}
+			out = append(out, converted)
+		}
+		return out, nil
+	case tftypes.Map:
+		var m map[string]tftypes.Value
+		if err := v.As(&m); err != nil {
+			return nil, err
+		}
+		out := make(map[string]interface{}, len(m))
+		for k, elem := range m {
+			converted, err := TfValueToJSON(ctx, elem)
+			if err != nil {
+				return nil, err
+			}
+			if converted == nil {
+				continue
+			}
+			out[k] = converted
+		}
+		return out, nil
+	default:
+		return nil, fmt.Errorf("unsupported tftypes.Type %T for JSON conversion", t)
+	}
+}
