@@ -59,8 +59,7 @@ func (d *ScpServerSnapshotDataSource) Read(ctx context.Context, req datasource.R
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := fmt.Sprintf("/api/v1/servers/%s/snapshots/%s", data.Name.ValueString(), strconv.FormatInt(data.ServerId.ValueInt64(), 10))
+	path := fmt.Sprintf("/api/v1/servers/%s/snapshots/%s", strconv.FormatInt(data.ServerId.ValueInt64(), 10), data.Name.ValueString())
 
 
 	body, err := d.client.Get(ctx, path, nil)

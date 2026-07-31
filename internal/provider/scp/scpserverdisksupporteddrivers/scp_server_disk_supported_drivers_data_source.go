@@ -59,7 +59,6 @@ func (d *ScpServerDiskSupportedDriversDataSource) Read(ctx context.Context, req 
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
 	path := fmt.Sprintf("/api/v1/servers/%s/disks/supported-drivers", strconv.FormatInt(data.ServerId.ValueInt64(), 10))
 
 

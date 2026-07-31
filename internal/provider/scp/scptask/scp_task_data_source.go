@@ -58,7 +58,6 @@ func (d *ScpTaskDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
 	path := fmt.Sprintf("/api/v1/tasks/%s", data.Uuid.ValueString())
 
 

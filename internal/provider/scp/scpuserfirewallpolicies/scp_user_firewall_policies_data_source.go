@@ -60,8 +60,7 @@ func (d *ScpUserFirewallPoliciesDataSource) Read(ctx context.Context, req dataso
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := "/api/v1/users/{userId}/firewall-policies"
+	path := fmt.Sprintf("/api/v1/users/%s/firewall-policies", strconv.FormatInt(data.UserId.ValueInt64(), 10))
 	query := url.Values{}
 	if !data.Limit.IsNull() && !data.Limit.IsUnknown() {
 		query.Set("limit", strconv.FormatInt(data.Limit.ValueInt64(), 10))

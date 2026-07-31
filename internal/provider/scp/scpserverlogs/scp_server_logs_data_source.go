@@ -60,7 +60,6 @@ func (d *ScpServerLogsDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
 	path := fmt.Sprintf("/api/v1/servers/%s/logs", strconv.FormatInt(data.ServerId.ValueInt64(), 10))
 	query := url.Values{}
 	if !data.Limit.IsNull() && !data.Limit.IsUnknown() {

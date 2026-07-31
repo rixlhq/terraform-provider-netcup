@@ -59,8 +59,7 @@ func (d *ScpUserImagePartDataSource) Read(ctx context.Context, req datasource.Re
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := fmt.Sprintf("/api/v1/users/{userId}/images/%s/%s/parts/%s", data.Key.ValueString(), strconv.FormatInt(data.PartNumber.ValueInt64(), 10), data.UploadId.ValueString())
+	path := fmt.Sprintf("/api/v1/users/%s/images/%s/%s/parts/%s", strconv.FormatInt(data.UserId.ValueInt64(), 10), data.Key.ValueString(), data.UploadId.ValueString(), strconv.FormatInt(data.PartNumber.ValueInt64(), 10))
 
 
 	body, err := d.client.Get(ctx, path, nil)

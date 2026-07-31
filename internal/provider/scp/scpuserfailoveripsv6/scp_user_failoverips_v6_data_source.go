@@ -60,8 +60,7 @@ func (d *ScpUserFailoveripsV6DataSource) Read(ctx context.Context, req datasourc
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := "/api/v1/users/{userId}/failoverips/v6"
+	path := fmt.Sprintf("/api/v1/users/%s/failoverips/v6", strconv.FormatInt(data.UserId.ValueInt64(), 10))
 	query := url.Values{}
 	if !data.Ip.IsNull() && !data.Ip.IsUnknown() {
 		query.Set("ip", data.Ip.ValueString())

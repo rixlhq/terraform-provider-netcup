@@ -3,6 +3,7 @@ package scpuserimages
 import (
 	"context"
 	"fmt"
+	"strconv"
 	
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
@@ -58,8 +59,7 @@ func (d *ScpUserImagesDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := "/api/v1/users/{userId}/images"
+	path := fmt.Sprintf("/api/v1/users/%s/images", strconv.FormatInt(data.UserId.ValueInt64(), 10))
 
 
 	body, err := d.client.Get(ctx, path, nil)

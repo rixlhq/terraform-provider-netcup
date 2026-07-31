@@ -60,8 +60,7 @@ func (d *ScpUserVlansDataSource) Read(ctx context.Context, req datasource.ReadRe
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
-	path := "/api/v1/users/{userId}/vlans"
+	path := fmt.Sprintf("/api/v1/users/%s/vlans", strconv.FormatInt(data.UserId.ValueInt64(), 10))
 	query := url.Values{}
 	if !data.ServerId.IsNull() && !data.ServerId.IsUnknown() {
 		query.Set("serverId", strconv.FormatInt(data.ServerId.ValueInt64(), 10))

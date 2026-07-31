@@ -60,7 +60,6 @@ func (d *ScpServersDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-
 	path := "/api/v1/servers"
 	query := url.Values{}
 	if !data.FirewallPolicyId.IsNull() && !data.FirewallPolicyId.IsUnknown() {
