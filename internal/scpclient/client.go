@@ -166,7 +166,7 @@ func (c *Client) refresh(ctx context.Context) error {
 	defer c.mu.Unlock()
 
 	if c.refreshToken == "" {
-		return fmt.Errorf("no refresh token available")
+		return errors.New("no refresh token available")
 	}
 
 	data := url.Values{}

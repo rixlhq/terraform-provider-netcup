@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/rixlhq/terraform-provider-netcup/internal/client"
 )
 
 func TestClientLogin(t *testing.T) {
@@ -17,7 +19,7 @@ func TestClientLogin(t *testing.T) {
 		if err != nil {
 			t.Fatalf("reading body: %v", err)
 		}
-		resp := Response{
+		resp := client.Response{
 			Status:       "success",
 			ShortMessage: "login successful",
 			ResponseData: json.RawMessage(`{"apisessionid":"session-123"}`),
@@ -26,7 +28,7 @@ func TestClientLogin(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c, err := New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
+	c, err := client.New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
 	if err != nil {
 		t.Fatalf("new client: %v", err)
 	}
@@ -39,7 +41,12 @@ func TestClientLogin(t *testing.T) {
 		t.Fatalf("expected session-123, got %s", session)
 	}
 
-	var req apiRequest
+	var req struct {
+		Action string `json:"action"`
+		Param  struct {
+			APIPassword string `json:"apipassword"`
+		} `json:"param"`
+	}
 	if err := json.Unmarshal(lastBody, &req); err != nil {
 		t.Fatalf("unmarshal request: %v", err)
 	}
@@ -53,7 +60,7 @@ func TestClientLogin(t *testing.T) {
 
 func TestClientInfoDnsRecords(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := Response{
+		resp := client.Response{
 			Status:       "success",
 			ShortMessage: "ok",
 			ResponseData: json.RawMessage(`{"dnsrecords":[{"id":"1","hostname":"@","type":"A","destination":"1.2.3.4"}]}`),
@@ -62,7 +69,7 @@ func TestClientInfoDnsRecords(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c, err := New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
+	c, err := client.New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
 	if err != nil {
 		t.Fatalf("new client: %v", err)
 	}
@@ -81,7 +88,7 @@ func TestClientInfoDnsRecords(t *testing.T) {
 
 func TestClientUpdateDnsRecords(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resp := Response{
+		resp := client.Response{
 			Status:       "success",
 			ShortMessage: "ok",
 			ResponseData: json.RawMessage(`{"dnsrecords":[{"id":"42","hostname":"www","type":"CNAME","destination":"example.com"}]}`),
@@ -90,14 +97,14 @@ func TestClientUpdateDnsRecords(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c, err := New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
+	c, err := client.New("12345", "key", "secret", srv.URL+"?JSON", srv.Client())
 	if err != nil {
 		t.Fatalf("new client: %v", err)
 	}
 
 	p := int64(10)
-	set, err := c.UpdateDnsRecords(context.Background(), "session", "example.com", &DNSRecordSet{
-		DNSRecords: []DNSRecord{{Hostname: "www", Type: "CNAME", Destination: "example.com", Priority: &p}},
+	set, err := c.UpdateDnsRecords(context.Background(), "session", "example.com", &client.DNSRecordSet{
+		DNSRecords: []client.DNSRecord{{Hostname: "www", Type: "CNAME", Destination: "example.com", Priority: &p}},
 	})
 	if err != nil {
 		t.Fatalf("update dns records: %v", err)
