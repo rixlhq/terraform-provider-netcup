@@ -35,3 +35,13 @@ resource "netcup_scp_failover_ip_v4" "example" {
 - `editable` (Boolean) Whether the failover IP is editable.
 - `id` (Number) Terraform identifier for this failover IP.
 - `ip` (String) The IPv4 address.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_failover_ip_v4.example 12345/67890
+```

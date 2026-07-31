@@ -72,3 +72,13 @@ Optional:
 - `number_of_effective_rules` (Number) Number of effective rules generated from this rule.
 - `source_ports` (String) Source port or range.
 - `sources` (List of String) Source CIDRs/addresses.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_user_firewall_policy.example 12345/67890
+```

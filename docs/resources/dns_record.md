@@ -46,3 +46,13 @@ resource "netcup_dns_record" "mx" {
 ### Read-Only
 
 - `id` (String) Unique ID assigned to the record by the netcup API.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_dns_record.example example.com/12345
+```

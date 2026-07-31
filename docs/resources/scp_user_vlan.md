@@ -32,3 +32,13 @@ resource "netcup_scp_user_vlan" "example" {
 ### Read-Only
 
 - `id` (Number) Terraform identifier for this VLAN.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_user_vlan.example 12345/67890
+```

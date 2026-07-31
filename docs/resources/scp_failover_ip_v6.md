@@ -35,3 +35,13 @@ resource "netcup_scp_failover_ip_v6" "example" {
 - `id` (Number) Terraform identifier for this failover IP.
 - `network_prefix` (String) The IPv6 network prefix.
 - `network_prefix_length` (Number) Length of the IPv6 network prefix.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_failover_ip_v6.example 12345/67890
+```

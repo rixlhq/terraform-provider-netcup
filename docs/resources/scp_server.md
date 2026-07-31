@@ -66,3 +66,13 @@ Optional:
 
 - `cores_per_socket_count` (Number) Number of CPU cores per socket.
 - `socket_count` (Number) Number of CPU sockets.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_server.example 12345
+```

@@ -32,3 +32,13 @@ resource "netcup_scp_rdns" "example" {
 ### Read-Only
 
 - `id` (String) Terraform identifier, set to the IP address.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_rdns.example ipv4/192.0.2.10
+```

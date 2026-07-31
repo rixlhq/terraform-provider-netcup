@@ -34,3 +34,13 @@ resource "netcup_dns_zone" "example" {
 - `refresh` (String) Refresh interval of the zone.
 - `retry` (String) Retry interval of the zone.
 - `serial` (String) Serial number of the zone.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_dns_zone.example example.com
+```

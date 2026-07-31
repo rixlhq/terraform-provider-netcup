@@ -57,3 +57,13 @@ Read-Only:
 - `headers` (Map of List of String) HTTP headers required to download the snapshot.
 - `presigned_url` (String) Presigned URL for downloading the exported snapshot.
 - `presigned_url_validity_duration_in_hours` (Number) Validity of the presigned URL in hours.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_server_snapshot.example 12345/snapshot-name
+```

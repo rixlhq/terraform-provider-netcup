@@ -52,3 +52,13 @@ resource "netcup_scp_user" "example" {
 - `id` (Number) User ID echoed from the API.
 - `lastname` (String) Last name.
 - `username` (String) Username of the account.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_user.example 12345
+```
