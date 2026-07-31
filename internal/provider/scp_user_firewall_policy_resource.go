@@ -99,7 +99,7 @@ func NewScpUserFirewallPolicyResource() resource.Resource {
 			deleteMethod: "DELETE",
 			responseRoot: "firewallPolicy",
 			pathParams:   []string{"user_id", "id"},
-			bodyExclude:  []string{"id"},
+			bodyExclude:  []string{"user_id", "id"},
 		},
 	}
 

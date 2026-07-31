@@ -19,6 +19,8 @@ import (
 // placeholders like {user_id} that are matched against the top-level Terraform
 // attribute names (snake_case). responseRoot is a dot-separated path into the
 // JSON response that contains the actual resource object (e.g. "firewallPolicy").
+// idFromAttr copies a known non-computed attribute (e.g. "ip" or "name") into
+// the computed "id" attribute for resources whose API response does not echo an id.
 type scpCrudResourceSpec struct {
 	typeName     string
 	createPath   string
@@ -32,6 +34,7 @@ type scpCrudResourceSpec struct {
 	responseRoot string
 	pathParams   []string
 	bodyExclude  []string
+	idFromAttr   string
 }
 
 // scpCrudResource is a generic Terraform resource backed by one SCP REST
@@ -94,15 +97,35 @@ func (r *scpCrudResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	stateVal, err := r.responseToState(ctx, tfType, respBody)
+	var apiStateVal tftypes.Value
+	if len(respBody) > 0 {
+		apiStateVal, err = r.responseToState(ctx, tfType, respBody)
+		if err == nil {
+			stateVal := overlayKnown(plan, apiStateVal)
+			resp.State.Raw = r.applyIdFromAttr(plan, stateVal)
+			return
+		}
+		// If the create response is empty, a task wrapper, or otherwise does not
+		// match the resource schema, read the resource back from the API.
+	}
+
+	readPath, err := r.buildPath(plan, r.spec.readPath)
+	if err != nil {
+		resp.Diagnostics.AddError("Read Path Error", err.Error())
+		return
+	}
+	readBody, err := r.doRequest(ctx, "GET", readPath, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("SCP API Read Error", err.Error())
+		return
+	}
+	apiStateVal, err = r.responseToState(ctx, tfType, readBody)
 	if err != nil {
 		resp.Diagnostics.AddError("State Error", err.Error())
 		return
 	}
-
-	// Merge known plan values (e.g. required path parameters the API response
-	// does not echo, such as user_id) into the response state.
-	resp.State.Raw = overlayKnown(plan, stateVal)
+	stateVal := overlayKnown(plan, apiStateVal)
+	resp.State.Raw = r.applyIdFromAttr(plan, stateVal)
 }
 
 func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -134,7 +157,7 @@ func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	stateVal, err := r.responseToState(ctx, tfType, respBody)
+	apiStateVal, err := r.responseToState(ctx, tfType, respBody)
 	if err != nil {
 		resp.Diagnostics.AddError("State Error", err.Error())
 		return
@@ -142,7 +165,8 @@ func (r *scpCrudResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	// Preserve path parameters and other known state values the API response
 	// does not include.
-	resp.State.Raw = overlayKnown(state, stateVal)
+	stateVal := overlayKnown(state, apiStateVal)
+	resp.State.Raw = r.applyIdFromAttr(state, stateVal)
 }
 
 func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -160,7 +184,7 @@ func (r *scpCrudResource) Update(ctx context.Context, req resource.UpdateRequest
 	// that do not echo every attribute.
 	combined := overlayKnown(state, plan)
 
-	// Path parameters like the computed id are known from state, while the
+	// Path parameters are known from the combined state/plan, while the
 	// request body is built from the planned configuration.
 	path, err := r.buildPath(combined, r.spec.updatePath)
 	if err != nil {
@@ -287,11 +311,10 @@ func (r *scpCrudResource) buildPath(v tftypes.Value, template string) (string, e
 }
 
 func (r *scpCrudResource) buildBody(v tftypes.Value) ([]byte, error) {
-	exclude := make(map[string]bool, len(r.spec.pathParams)+len(r.spec.bodyExclude))
-	for _, attr := range r.spec.pathParams {
-		// TfValueToJSON converts snake_case attribute names to camelCase JSON keys.
-		exclude[scpcommon.SnakeToCamel(attr)] = true
-	}
+	// Only bodyExclude is removed from the request body. Path parameters that
+	// also belong in the body (e.g. "ip" for rDNS) must not be excluded by
+	// default; they can be listed explicitly here when needed.
+	exclude := make(map[string]bool, len(r.spec.bodyExclude))
 	for _, attr := range r.spec.bodyExclude {
 		exclude[scpcommon.SnakeToCamel(attr)] = true
 	}
@@ -411,6 +434,46 @@ func overlayKnown(base, response tftypes.Value) tftypes.Value {
 	default:
 		return response
 	}
+}
+
+// applyIdFromAttr copies the value of a source attribute (e.g. "ip") into the
+// computed "id" attribute when the API response does not include an id. This lets
+// Terraform identify resources whose natural key is a path parameter.
+func (r *scpCrudResource) applyIdFromAttr(base, v tftypes.Value) tftypes.Value {
+	if r.spec.idFromAttr == "" {
+		return v
+	}
+	objType, ok := v.Type().(tftypes.Object)
+	if !ok {
+		return v
+	}
+	if _, hasID := objType.AttributeTypes["id"]; !hasID {
+		return v
+	}
+
+	obj := make(map[string]tftypes.Value)
+	_ = v.As(&obj)
+
+	idVal, ok := obj["id"]
+	if ok && idVal.IsKnown() && !idVal.IsNull() {
+		return v
+	}
+
+	baseObj := make(map[string]tftypes.Value)
+	if base.IsKnown() && !base.IsNull() {
+		_ = base.As(&baseObj)
+	}
+	srcVal, ok := baseObj[r.spec.idFromAttr]
+	if !ok || !srcVal.IsKnown() || srcVal.IsNull() {
+		return v
+	}
+
+	idType := objType.AttributeTypes["id"]
+	if !srcVal.Type().Is(idType) {
+		return v
+	}
+	obj["id"] = srcVal
+	return tftypes.NewValue(v.Type(), obj)
 }
 
 func (r *scpCrudResource) valueAsString(v tftypes.Value) (string, error) {
