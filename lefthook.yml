@@ -3,11 +3,11 @@ pre-commit:
   commands:
     lint:
       glob: "*.{go}"
-      run: golangci-lint run --new
+      run: mise exec -- golangci-lint run --new
       stage_fixed: true
     format:
       glob: "*.{go}"
-      run: gofmt -s -w {staged_files}
+      run: mise exec -- gofmt -s -w {staged_files}
       stage_fixed: true
 
 pre-push:

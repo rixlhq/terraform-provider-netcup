@@ -1,6 +1,6 @@
 [tools]
 go = "1.26.5"
-terraform = "1.9.8"
+terraform = "1.10.0"
 golangci-lint = "2.12.2"
 lefthook = "2.1.10"
 "go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "v0.25.0"
