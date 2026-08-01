@@ -45,7 +45,7 @@ CGO_ENABLED=0 mise exec -- go build -o /tmp/terraform-provider-netcup .
 mise run docs
 ```
 
-`git diff --stat` should be empty after generation.
+`mise run docs` first runs `tools/openapi_descriptions.py`, which fetches the live SCP OpenAPI spec and patches the generated data source schemas, then runs `tfplugindocs generate`. `git diff --stat` should be empty after generation.
 
 ## Snapshot release build
 
@@ -144,8 +144,20 @@ Pass criteria:
 
 ## Acceptance test coverage
 
-- `TestAccScpRdns_basic` validates the `netcup_scp_rdns` resource against an `httptest` mock.
-- `TestAccScpServerInterfaceFirewall_basic` validates the `netcup_scp_server_interface_firewall` resource and the `scpclient` 202/`FINISHED` task short-circuit behavior.
+The `internal/provider/*_resource_test.go` files use `terraform-plugin-testing` with `httptest` mocks and run with `TF_ACC=1`. All tests are safe to run without real Netcup credentials; they do not create, restart, or destroy real servers.
+
+- `TestAccScpRdns_basic` — `netcup_scp_rdns`
+- `TestAccScpServer_basic` — `netcup_scp_server` (merge patches, read-back)
+- `TestAccScpServerAction_basic` — `netcup_scp_server_action`
+- `TestAccScpServerInterfaceFirewall_basic` — `netcup_scp_server_interface_firewall` and the `scpclient` 202/`FINISHED` task short-circuit
+- `TestAccScpServerSnapshot_basic` — `netcup_scp_server_snapshot`
+- `TestAccScpFailoverIpV4_basic` — `netcup_scp_failover_ip_v4`
+- `TestAccScpFailoverIpV6_basic` — `netcup_scp_failover_ip_v6`
+- `TestAccScpUserVlan_basic` — `netcup_scp_user_vlan`
+- `TestAccScpUser_basic` — `netcup_scp_user`
+- `TestAccScpUserFirewallPolicy_basic` — `netcup_scp_user_firewall_policy`
+- `TestAccScpUserSshKey_basic` — `netcup_scp_user_ssh_key`
+- `TestAccScpTaskAction_basic` — `netcup_scp_task_action`
 
 ## Common gotchas
 
