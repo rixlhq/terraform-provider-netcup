@@ -104,7 +104,7 @@ func (m *snapshotMock) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	if err := json.NewEncoder(w).Encode(snapshotTaskResponse{UUID: "task-snapshot-1", State: "FINISHED"}); err != nil {
+	if err := json.NewEncoder(w).Encode(snapshotTaskResponse{UUID: "task-snapshot-1", State: taskStateFinished}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

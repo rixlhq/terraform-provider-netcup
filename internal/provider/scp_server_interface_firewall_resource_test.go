@@ -101,7 +101,7 @@ func newFirewallMockServer(t *testing.T) *httptest.Server {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusAccepted)
-			_ = json.NewEncoder(w).Encode(map[string]any{"uuid": "task-1", "state": "FINISHED"})
+			_ = json.NewEncoder(w).Encode(map[string]any{"uuid": "task-1", "state": taskStateFinished})
 		default:
 			http.Error(w, "not allowed", http.StatusMethodNotAllowed)
 		}
