@@ -1,3 +1,6 @@
 package provider_test
 
-const taskStateFinished = "FINISHED"
+const (
+	taskStateFinished = "FINISHED"
+	attrVlanID        = "vlan_id"
+)

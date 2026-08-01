@@ -8,4 +8,5 @@ const (
 	attrFailoverIPID = "failover_ip_id"
 	attrServerID     = "server_id"
 	attrUserID       = "user_id"
+	attrVlanID       = "vlan_id"
 )
