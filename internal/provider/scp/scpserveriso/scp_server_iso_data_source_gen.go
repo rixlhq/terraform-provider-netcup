@@ -11,6 +11,7 @@ import (
 
 func ScpServerIsoDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get attached ISO of a server.",
 		Attributes: map[string]schema.Attribute{
 			"iso": schema.StringAttribute{
 				Computed: true,

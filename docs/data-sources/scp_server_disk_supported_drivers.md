@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_disk_supported_drivers Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get a list of supported storage drivers for this server
 ---
 
 # netcup_scp_server_disk_supported_drivers (Data Source)
 
-
+Get a list of supported storage drivers for this server
 
 
 

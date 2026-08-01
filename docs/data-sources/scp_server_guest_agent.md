@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_guest_agent Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get guest agent data for server
 ---
 
 # netcup_scp_server_guest_agent (Data Source)
 
-
+Get guest agent data for server
 
 
 

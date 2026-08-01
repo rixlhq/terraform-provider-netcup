@@ -17,6 +17,7 @@ import (
 
 func ScpServerIsoimagesDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get available ISO images for server",
 		Attributes: map[string]schema.Attribute{
 			"scp_server_isoimages": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

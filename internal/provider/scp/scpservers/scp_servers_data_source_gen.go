@@ -19,6 +19,7 @@ import (
 
 func ScpServersDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get servers",
 		Attributes: map[string]schema.Attribute{
 			"firewall_policy_id": schema.Int64Attribute{
 				Optional:            true,

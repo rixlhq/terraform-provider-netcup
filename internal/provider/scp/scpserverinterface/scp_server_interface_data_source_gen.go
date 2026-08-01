@@ -20,6 +20,7 @@ import (
 
 func ScpServerInterfaceDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get an interface and IPs of a server including routed IPs and rDNS entries.",
 		Attributes: map[string]schema.Attribute{
 			"driver": schema.StringAttribute{
 				Computed: true,

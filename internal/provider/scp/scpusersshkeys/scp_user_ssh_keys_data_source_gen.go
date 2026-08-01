@@ -17,6 +17,7 @@ import (
 
 func ScpUserSshKeysDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get SSH keys",
 		Attributes: map[string]schema.Attribute{
 			"scp_user_ssh_keys": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

@@ -11,6 +11,7 @@ import (
 
 func ScpServerDiskDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get a disk of a server",
 		Attributes: map[string]schema.Attribute{
 			"allocation_in_mi_b": schema.Int64Attribute{
 				Computed: true,

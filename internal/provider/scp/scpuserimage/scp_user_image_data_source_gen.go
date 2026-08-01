@@ -11,6 +11,7 @@ import (
 
 func ScpUserImageDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get download informations for an image",
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
 				Computed: true,

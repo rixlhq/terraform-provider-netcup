@@ -11,6 +11,7 @@ import (
 
 func ScpUserIsoDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get presigned URL for an ISO",
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
 				Computed: true,

@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user_vlans Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get VLans of a user
 ---
 
 # netcup_scp_user_vlans (Data Source)
 
-
+Get VLans of a user
 
 
 

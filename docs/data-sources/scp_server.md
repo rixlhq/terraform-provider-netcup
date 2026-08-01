@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get one server
 ---
 
 # netcup_scp_server (Data Source)
 
-
+Get one server
 
 ## Example Usage
 

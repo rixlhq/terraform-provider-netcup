@@ -11,6 +11,7 @@ import (
 
 func ScpServerGuestAgentStatusDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get guest agent status for server",
 		Attributes: map[string]schema.Attribute{
 			"available": schema.BoolAttribute{
 				Computed: true,

@@ -3,12 +3,12 @@
 page_title: "netcup_scp_rdns_ipv4 Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get rDNS for an IPv4.
 ---
 
 # netcup_scp_rdns_ipv4 (Data Source)
 
-
+Get rDNS for an IPv4.
 
 
 

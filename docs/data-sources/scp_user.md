@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get one user
 ---
 
 # netcup_scp_user (Data Source)
 
-
+Get one user
 
 ## Example Usage
 

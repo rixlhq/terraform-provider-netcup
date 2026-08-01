@@ -11,6 +11,7 @@ import (
 
 func ScpUserImagePartDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get a presigned upload URL for a single part",
 		Attributes: map[string]schema.Attribute{
 			"key": schema.StringAttribute{
 				Required: true,

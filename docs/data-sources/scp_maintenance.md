@@ -3,12 +3,12 @@
 page_title: "netcup_scp_maintenance Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get maintenance information for system. This endpoint has been deprecated and will be removed by 31.12.2026.
 ---
 
 # netcup_scp_maintenance (Data Source)
 
-
+Get maintenance information for system. This endpoint has been deprecated and will be removed by 31.12.2026.
 
 
 

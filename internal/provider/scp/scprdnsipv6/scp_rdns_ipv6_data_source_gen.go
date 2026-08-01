@@ -14,6 +14,7 @@ import (
 
 func ScpRdnsIpv6DataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get rDNS for an IPv6.",
 		Attributes: map[string]schema.Attribute{
 			"ip": schema.StringAttribute{
 				Required: true,

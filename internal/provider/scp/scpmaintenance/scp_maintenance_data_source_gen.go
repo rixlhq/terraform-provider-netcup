@@ -11,6 +11,7 @@ import (
 
 func ScpMaintenanceDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get maintenance information for system. This endpoint has been deprecated and will be removed by 31.12.2026.",
 		Attributes: map[string]schema.Attribute{
 			"finish_at": schema.StringAttribute{
 				Computed: true,

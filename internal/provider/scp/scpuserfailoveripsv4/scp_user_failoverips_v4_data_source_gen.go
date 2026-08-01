@@ -17,6 +17,7 @@ import (
 
 func ScpUserFailoveripsV4DataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get all failover IPv4s of this user.",
 		Attributes: map[string]schema.Attribute{
 			"ip": schema.StringAttribute{
 				Optional: true,

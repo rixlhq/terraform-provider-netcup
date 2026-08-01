@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_guest_agent_status Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get guest agent status for server
 ---
 
 # netcup_scp_server_guest_agent_status (Data Source)
 
-
+Get guest agent status for server
 
 
 

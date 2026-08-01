@@ -20,6 +20,7 @@ import (
 
 func ScpTasksDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get all tasks",
 		Attributes: map[string]schema.Attribute{
 			"limit": schema.Int64Attribute{
 				Optional: true,

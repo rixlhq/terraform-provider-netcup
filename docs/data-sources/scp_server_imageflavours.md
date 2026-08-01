@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_imageflavours Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get available image flavours for server image setup. Images whose storage driver is not supported by the server's machine type are not shown.
 ---
 
 # netcup_scp_server_imageflavours (Data Source)
 
-
+Get available image flavours for server image setup. Images whose storage driver is not supported by the server's machine type are not shown.
 
 ## Example Usage
 

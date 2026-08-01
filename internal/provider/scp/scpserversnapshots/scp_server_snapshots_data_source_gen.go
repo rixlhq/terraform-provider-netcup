@@ -17,6 +17,7 @@ import (
 
 func ScpServerSnapshotsDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get all snapshots of a server.",
 		Attributes: map[string]schema.Attribute{
 			"scp_server_snapshots": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
