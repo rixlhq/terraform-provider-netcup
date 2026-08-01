@@ -1,0 +1,55 @@
+[tools]
+go = "1.26.5"
+terraform = "1.15.8"
+golangci-lint = "2.12.2"
+lefthook = "2.1.10"
+"ubi:goreleaser/goreleaser" = "2.17.1"
+"go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "v0.25.0"
+
+[hooks]
+postinstall = "lefthook install"
+
+[tasks.build]
+description = "Build the provider"
+run = "go build -v ./..."
+
+[tasks.install]
+description = "Install the provider binary"
+depends = ["build"]
+run = "go install -v ./..."
+
+[tasks.test]
+description = "Run unit tests"
+usage = 'arg "<pkg>" default="./..."'
+run = "go test -v -cover -timeout=120s -parallel=10 ${usage_pkg?}"
+
+[tasks.testacc]
+description = "Run acceptance tests (requires real credentials)"
+usage = 'arg "<pkg>" default="./..."'
+env = { TF_ACC = "1" }
+run = "go test -v -cover -timeout=120m ${usage_pkg?}"
+
+[tasks.fmt]
+description = "Format Go source files"
+run = "gofmt -s -w -e ."
+
+[tasks.fmt-check]
+description = "Check Go formatting"
+run = "gofmt -s -l -e ."
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = "golangci-lint run ./..."
+
+[tasks.docs]
+description = "Generate Terraform Registry docs"
+run = "tfplugindocs generate"
+
+[tasks.default]
+description = "Default local development check"
+run = [
+  { task = "fmt" },
+  { task = "build" },
+  { task = "test" },
+  { task = "lint" },
+]
