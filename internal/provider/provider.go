@@ -195,6 +195,7 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 		NewScpUserResource,
 		NewScpUserSshKeyResource,
 		NewScpTaskActionResource,
+		NewScpServerInterfaceResource,
 		NewScpServerInterfaceFirewallResource,
 	}
 }

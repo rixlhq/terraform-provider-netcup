@@ -69,10 +69,16 @@ func (c *Client) handleResult(ctx context.Context, method, path string, body []b
 			logKeyMethod: method,
 			logKeyPath:   path,
 		})
-		if err := c.waitForTask(ctx, body); err != nil {
+		taskResult, err := c.waitForTask(ctx, body)
+		if err != nil {
 			return nil, false, err
 		}
-		// Return an empty body so callers perform a read-back.
+		// Some endpoints return the created object in the task result.
+		// Return it when present so callers can derive a stable id.
+		if taskResult != nil {
+			return taskResult, false, nil
+		}
+		// Otherwise callers perform a read-back.
 		return nil, false, nil
 	case status == http.StatusUnauthorized && c.refreshToken != "":
 		if err := c.refresh(ctx); err != nil {

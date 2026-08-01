@@ -1,6 +1,7 @@
 package scpclient
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,15 +11,16 @@ import (
 )
 
 type taskInfo struct {
-	UUID    string `json:"uuid"`
-	State   string `json:"state"`
-	Message string `json:"message"`
+	UUID    string          `json:"uuid"`
+	State   string          `json:"state"`
+	Message string          `json:"message"`
+	Result  json.RawMessage `json:"result"`
 }
 
-func (c *Client) waitForTask(ctx context.Context, body []byte) error {
+func (c *Client) waitForTask(ctx context.Context, body []byte) ([]byte, error) {
 	info, ok := parseTaskInfo(body)
 	if !ok {
-		return nil
+		return nil, nil
 	}
 
 	tflog.Debug(ctx, "polling SCP task", map[string]any{
@@ -26,7 +28,7 @@ func (c *Client) waitForTask(ctx context.Context, body []byte) error {
 	})
 
 	if err := checkTaskState(info); err != nil || info.State == "FINISHED" {
-		return err
+		return taskResultBytes(info.Result), err
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, taskTimeout)
@@ -38,21 +40,28 @@ func (c *Client) waitForTask(ctx context.Context, body []byte) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("timeout waiting for task %s", info.UUID)
+			return nil, fmt.Errorf("timeout waiting for task %s", info.UUID)
 		case <-ticker.C:
 		}
 
 		task, err := c.pollTask(ctx, info.UUID)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if err := checkTaskState(task); err != nil {
-			return err
+			return nil, err
 		}
 		if task.State == "FINISHED" {
-			return nil
+			return taskResultBytes(task.Result), nil
 		}
 	}
+}
+
+func taskResultBytes(r json.RawMessage) []byte {
+	if len(r) == 0 || bytes.Equal(r, []byte("null")) {
+		return nil
+	}
+	return r
 }
 
 func parseTaskInfo(body []byte) (taskInfo, bool) {

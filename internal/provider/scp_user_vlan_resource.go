@@ -22,10 +22,10 @@ func NewScpUserVlanResource() resource.Resource {
 			createReadsBack: true,
 			updateReadsBack: true,
 			noDelete:        true,
-			pathParams:      []string{attrUserID, "vlan_id"},
-			bodyExclude:     []string{attrUserID, "vlan_id", "id"},
-			idFromAttr:      "vlan_id",
-			importIDAttrs:   []string{attrUserID, "vlan_id"},
+			pathParams:      []string{attrUserID, attrVlanID},
+			bodyExclude:     []string{attrUserID, attrVlanID, "id"},
+			idFromAttr:      attrVlanID,
+			importIDAttrs:   []string{attrUserID, attrVlanID},
 		},
 	}
 }
