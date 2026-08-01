@@ -19,6 +19,7 @@ import (
 
 func ScpServerLogsDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get server logs",
 		Attributes: map[string]schema.Attribute{
 			"limit": schema.Int64Attribute{
 				Optional: true,

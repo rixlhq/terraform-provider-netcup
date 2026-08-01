@@ -17,6 +17,7 @@ import (
 
 func ScpUserVlansDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get VLans of a user",
 		Attributes: map[string]schema.Attribute{
 			"scp_user_vlans": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

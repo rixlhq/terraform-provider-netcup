@@ -11,6 +11,7 @@ import (
 
 func ScpUserDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get one user",
 		Attributes: map[string]schema.Attribute{
 			"api_ip_login_restrictions": schema.StringAttribute{
 				Computed: true,

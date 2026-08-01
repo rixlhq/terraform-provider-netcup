@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_iso Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get attached ISO of a server.
 ---
 
 # netcup_scp_server_iso (Data Source)
 
-
+Get attached ISO of a server.
 
 
 

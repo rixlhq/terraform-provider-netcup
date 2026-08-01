@@ -17,6 +17,7 @@ import (
 
 func ScpUserVlanDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get a VLan of a user",
 		Attributes: map[string]schema.Attribute{
 			"bandwidth_class": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{

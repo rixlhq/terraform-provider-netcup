@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_interfaces Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get all interfaces and IPs of a server including routed IPs and rDNS entries.
 ---
 
 # netcup_scp_server_interfaces (Data Source)
 
-
+Get all interfaces and IPs of a server including routed IPs and rDNS entries.
 
 
 

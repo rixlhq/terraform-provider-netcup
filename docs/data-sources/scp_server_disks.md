@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_disks Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get disks of a server
 ---
 
 # netcup_scp_server_disks (Data Source)
 
-
+Get disks of a server
 
 
 

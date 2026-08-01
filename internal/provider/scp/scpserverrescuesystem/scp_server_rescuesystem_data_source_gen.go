@@ -11,6 +11,7 @@ import (
 
 func ScpServerRescuesystemDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get rescue system status for a server.",
 		Attributes: map[string]schema.Attribute{
 			"active": schema.BoolAttribute{
 				Computed: true,

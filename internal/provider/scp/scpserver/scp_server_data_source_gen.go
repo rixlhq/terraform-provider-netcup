@@ -17,6 +17,7 @@ import (
 
 func ScpServerDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get one server",
 		Attributes: map[string]schema.Attribute{
 			"architecture": schema.StringAttribute{
 				Computed: true,

@@ -17,6 +17,7 @@ import (
 
 func ScpServerImageflavoursDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get available image flavours for server image setup. Images whose storage driver is not supported by the server's machine type are not shown.",
 		Attributes: map[string]schema.Attribute{
 			"scp_server_imageflavours": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

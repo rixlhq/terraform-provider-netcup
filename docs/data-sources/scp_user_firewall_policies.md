@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user_firewall_policies Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get firewall policies
 ---
 
 # netcup_scp_user_firewall_policies (Data Source)
 
-
+Get firewall policies
 
 
 

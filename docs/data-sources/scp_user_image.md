@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user_image Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get download informations for an image
 ---
 
 # netcup_scp_user_image (Data Source)
 
-
+Get download informations for an image
 
 
 

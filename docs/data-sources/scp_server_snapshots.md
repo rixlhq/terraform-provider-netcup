@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_snapshots Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get all snapshots of a server.
 ---
 
 # netcup_scp_server_snapshots (Data Source)
 
-
+Get all snapshots of a server.
 
 
 

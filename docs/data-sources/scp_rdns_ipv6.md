@@ -3,12 +3,12 @@
 page_title: "netcup_scp_rdns_ipv6 Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get rDNS for an IPv6.
 ---
 
 # netcup_scp_rdns_ipv6 (Data Source)
 
-
+Get rDNS for an IPv6.
 
 
 

@@ -17,6 +17,7 @@ import (
 
 func ScpServerInterfacesDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get all interfaces and IPs of a server including routed IPs and rDNS entries.",
 		Attributes: map[string]schema.Attribute{
 			"load_rdns": schema.BoolAttribute{
 				Optional: true,

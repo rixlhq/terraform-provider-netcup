@@ -17,6 +17,7 @@ import (
 
 func ScpTaskDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get one task",
 		Attributes: map[string]schema.Attribute{
 			"executing_user": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{

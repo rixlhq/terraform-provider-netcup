@@ -17,6 +17,7 @@ import (
 
 func ScpUserImagesDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get all available user images",
 		Attributes: map[string]schema.Attribute{
 			"scp_user_images": schema.SetNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user_logs Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get user logs
 ---
 
 # netcup_scp_user_logs (Data Source)
 
-
+Get user logs
 
 
 

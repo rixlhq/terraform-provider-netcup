@@ -11,6 +11,7 @@ import (
 
 func ScpServerGpuDriverDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Generate presigned download URL for GPU driver if available",
 		Attributes: map[string]schema.Attribute{
 			"filename": schema.StringAttribute{
 				Computed: true,

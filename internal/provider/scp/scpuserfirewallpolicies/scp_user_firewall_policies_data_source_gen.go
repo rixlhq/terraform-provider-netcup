@@ -19,6 +19,7 @@ import (
 
 func ScpUserFirewallPoliciesDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get firewall policies",
 		Attributes: map[string]schema.Attribute{
 			"limit": schema.Int64Attribute{
 				Optional: true,

@@ -3,12 +3,12 @@
 page_title: "netcup_scp_user_failoverips_v4 Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get all failover IPv4s of this user.
 ---
 
 # netcup_scp_user_failoverips_v4 (Data Source)
 
-
+Get all failover IPv4s of this user.
 
 
 

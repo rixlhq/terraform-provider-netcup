@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_rescuesystem Data Source - terraform-provider-netcup"
 subcategory: ""
 description: |-
-  
+  Get rescue system status for a server.
 ---
 
 # netcup_scp_server_rescuesystem (Data Source)
 
-
+Get rescue system status for a server.
 
 
 

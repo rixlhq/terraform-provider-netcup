@@ -11,6 +11,7 @@ import (
 
 func ScpServerDiskSupportedDriversDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get a list of supported storage drivers for this server",
 		Attributes: map[string]schema.Attribute{
 			"scp_server_disk_supported_drivers": schema.SetAttribute{
 				ElementType: types.StringType,

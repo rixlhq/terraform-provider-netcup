@@ -17,6 +17,7 @@ import (
 
 func ScpServerSnapshotDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get a snapshot of a server.",
 		Attributes: map[string]schema.Attribute{
 			"creation_time": schema.StringAttribute{
 				Computed: true,

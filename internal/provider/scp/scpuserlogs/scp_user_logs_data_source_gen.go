@@ -19,6 +19,7 @@ import (
 
 func ScpUserLogsDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		MarkdownDescription: "Get user logs",
 		Attributes: map[string]schema.Attribute{
 			"limit": schema.Int64Attribute{
 				Optional: true,
