@@ -24,10 +24,10 @@ usage = 'arg "<pkg>" default="./..."'
 run = "go test -v -cover -timeout=120s -parallel=10 ${usage_pkg?}"
 
 [tasks.testacc]
-description = "Run acceptance tests (requires real credentials)"
+description = "Run acceptance tests with TF_ACC=1 (uses mock SCP server by default)"
 usage = 'arg "<pkg>" default="./..."'
 env = { TF_ACC = "1" }
-run = "go test -v -cover -timeout=120m ${usage_pkg?}"
+run = "go test -v -race -cover -timeout=120m -parallel=10 ${usage_pkg?}"
 
 [tasks.fmt]
 description = "Format Go source files"
