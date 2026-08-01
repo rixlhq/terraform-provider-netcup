@@ -36,10 +36,10 @@ provider "netcup" {
 
 ### Optional
 
-- `api_key` (String, Sensitive) Netcup API key generated in the Customer Control Panel for the CCP/DNS API.
-- `api_password` (String, Sensitive) Netcup API password generated in the Customer Control Panel for the CCP/DNS API.
-- `customer_number` (String) Netcup customer number for the CCP/DNS API.
-- `endpoint` (String) Override the netcup CCP JSON API endpoint. Defaults to the production endpoint.
-- `scp_access_token` (String, Sensitive) Bearer access token for the netcup SCP REST API.
-- `scp_base_url` (String) Override the netcup SCP REST API base URL. Defaults to https://www.servercontrolpanel.de/scp-core.
-- `scp_refresh_token` (String, Sensitive) Offline refresh token for the netcup SCP REST API.
+- `api_key` (String, Sensitive) Netcup API key generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_KEY` environment variable.
+- `api_password` (String, Sensitive) Netcup API password generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_PASSWORD` environment variable.
+- `customer_number` (String) Netcup customer number for the CCP/DNS API. Can be set via the `NETCUP_CUSTOMER_NUMBER` environment variable.
+- `endpoint` (String) Override the netcup CCP JSON API endpoint. Can be set via the `NETCUP_ENDPOINT` environment variable.
+- `scp_access_token` (String, Sensitive) Bearer access token for the netcup SCP REST API. Can be set via the `NETCUP_SCP_ACCESS_TOKEN` environment variable.
+- `scp_base_url` (String) Override the netcup SCP REST API base URL. Can be set via the `NETCUP_SCP_BASE_URL` environment variable.
+- `scp_refresh_token` (String, Sensitive) Offline refresh token for the netcup SCP REST API. Can be set via the `NETCUP_SCP_REFRESH_TOKEN` environment variable.

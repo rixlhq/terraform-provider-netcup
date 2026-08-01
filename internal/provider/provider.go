@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -52,35 +53,35 @@ func (p *NetcupProvider) Schema(ctx context.Context, req provider.SchemaRequest,
 		MarkdownDescription: "Terraform provider for managing netcup CCP DNS and SCP resources. Supports provider-defined functions and ephemeral resources when using protocol version 6.0.",
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
-				MarkdownDescription: "Netcup API key generated in the Customer Control Panel for the CCP/DNS API.",
+				MarkdownDescription: "Netcup API key generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_KEY` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"api_password": schema.StringAttribute{
-				MarkdownDescription: "Netcup API password generated in the Customer Control Panel for the CCP/DNS API.",
+				MarkdownDescription: "Netcup API password generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_PASSWORD` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"customer_number": schema.StringAttribute{
-				MarkdownDescription: "Netcup customer number for the CCP/DNS API.",
+				MarkdownDescription: "Netcup customer number for the CCP/DNS API. Can be set via the `NETCUP_CUSTOMER_NUMBER` environment variable.",
 				Optional:            true,
 			},
 			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "Override the netcup CCP JSON API endpoint. Defaults to the production endpoint.",
+				MarkdownDescription: "Override the netcup CCP JSON API endpoint. Can be set via the `NETCUP_ENDPOINT` environment variable.",
 				Optional:            true,
 			},
 			"scp_access_token": schema.StringAttribute{
-				MarkdownDescription: "Bearer access token for the netcup SCP REST API.",
+				MarkdownDescription: "Bearer access token for the netcup SCP REST API. Can be set via the `NETCUP_SCP_ACCESS_TOKEN` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"scp_refresh_token": schema.StringAttribute{
-				MarkdownDescription: "Offline refresh token for the netcup SCP REST API.",
+				MarkdownDescription: "Offline refresh token for the netcup SCP REST API. Can be set via the `NETCUP_SCP_REFRESH_TOKEN` environment variable.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"scp_base_url": schema.StringAttribute{
-				MarkdownDescription: "Override the netcup SCP REST API base URL. Defaults to https://www.servercontrolpanel.de/scp-core.",
+				MarkdownDescription: "Override the netcup SCP REST API base URL. Can be set via the `NETCUP_SCP_BASE_URL` environment variable.",
 				Optional:            true,
 			},
 		},
@@ -93,6 +94,8 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	data = applyEnvOverrides(data)
 
 	ccpClient, hasCCP, err := newCCPClient(data)
 	if err != nil {
@@ -112,6 +115,27 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	resp.DataSourceData = &providerData{CCP: ccpClient, SCP: scpClient}
 	resp.ResourceData = &providerData{CCP: ccpClient, SCP: scpClient}
+}
+
+func applyEnvOverrides(data NetcupProviderModel) NetcupProviderModel {
+	data.APIKey = envOrString(data.APIKey, "NETCUP_API_KEY")
+	data.APIPassword = envOrString(data.APIPassword, "NETCUP_API_PASSWORD")
+	data.CustomerNumber = envOrString(data.CustomerNumber, "NETCUP_CUSTOMER_NUMBER")
+	data.Endpoint = envOrString(data.Endpoint, "NETCUP_ENDPOINT")
+	data.SCPAccessToken = envOrString(data.SCPAccessToken, "NETCUP_SCP_ACCESS_TOKEN")
+	data.SCPRefreshToken = envOrString(data.SCPRefreshToken, "NETCUP_SCP_REFRESH_TOKEN")
+	data.SCPBaseURL = envOrString(data.SCPBaseURL, "NETCUP_SCP_BASE_URL")
+	return data
+}
+
+func envOrString(v types.String, env string) types.String {
+	if !v.IsNull() && !v.IsUnknown() && v.ValueString() != "" {
+		return v
+	}
+	if val := os.Getenv(env); val != "" {
+		return types.StringValue(val)
+	}
+	return v
 }
 
 func newCCPClient(data NetcupProviderModel) (*client.Client, bool, error) {
