@@ -115,10 +115,42 @@ export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
 ~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
+## Environment-variable credential fallback
+
+To verify provider credentials can be supplied via environment variables, build the provider binary and run Terraform with an empty `provider` block:
+
+```bash
+CGO_ENABLED=0 mise exec -- go build -o /tmp/terraform-provider-netcup .
+
+# In one terminal, start a mock SCP API on /scp-core/api/v1/rdns/ipv4, etc.
+python3 /tmp/mock_scp_env.py
+
+# In another terminal:
+export TF_CLI_CONFIG_FILE=/tmp/tftest_env/terraform.rc
+export NETCUP_SCP_ACCESS_TOKEN='env-token'
+export NETCUP_SCP_BASE_URL='http://127.0.0.1:<MOCK_PORT>/scp-core'
+
+~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env apply -auto-approve
+~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env plan
+~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env destroy -auto-approve
+```
+
+Pass criteria:
+
+- `terraform apply` creates `netcup_scp_rdns`.
+- `terraform plan` reports `No changes.`.
+- `terraform destroy` succeeds.
+- The mock server receives `Authorization: Bearer env-token`, proving env vars were used.
+
+## Acceptance test coverage
+
+- `TestAccScpRdns_basic` validates the `netcup_scp_rdns` resource against an `httptest` mock.
+- `TestAccScpServerInterfaceFirewall_basic` validates the `netcup_scp_server_interface_firewall` resource and the `scpclient` 202/`FINISHED` task short-circuit behavior.
+
 ## Common gotchas
 
 - The SCP OpenAPI spec returns camelCase keys; the provider schema is snake_case. If any computed field (e.g. `ipv4addresses`, `server_live_info`, `max_cpu_count`) is `null`, the key-mapping helper in `internal/provider/scpcommon/helpers.go` is not normalizing keys.
 - Local checks can be run with `mise run`; CI uses `actions/setup-go@v7` and the
   official GitHub Actions for `golangci-lint` and `GoReleaser` instead of mise.
 - Do not run actions against the real netcup SCP API unless a real token is provided and the user explicitly approves destructive operations.
-- `mise run testacc` runs acceptance tests with the local mock SCP server; no real credentials are needed for `TestAccScpRdns_basic`.
+- `mise run testacc` runs acceptance tests with the local mock SCP server; no real credentials are needed for `TestAccScpRdns_basic` or `TestAccScpServerInterfaceFirewall_basic`.
