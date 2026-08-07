@@ -16,8 +16,9 @@ It supports both the **Customer Control Panel (CCP) DNS API** and the **Server C
 ## Provider Configuration
 
 Configure the credentials for the APIs you want to use. CCP credentials are
-required for DNS resources, and an SCP access token is required for SCP data
-sources. Both can be configured at the same time.
+required for DNS resources, and either an SCP access token or refresh token is
+required for SCP data sources. Both SCP token types can be configured at the
+same time.
 
 ```hcl
 terraform {

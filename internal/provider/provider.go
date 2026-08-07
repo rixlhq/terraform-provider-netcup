@@ -108,7 +108,7 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	if !hasCCP && !hasSCP {
 		resp.Diagnostics.AddError(
 			"Missing Credentials",
-			"Either CCP credentials (api_key, api_password, customer_number) or SCP credentials (scp_access_token) must be configured.",
+			"Either CCP credentials (api_key, api_password, customer_number) or SCP credentials (scp_access_token or scp_refresh_token) must be configured.",
 		)
 		return
 	}
@@ -163,7 +163,7 @@ func newCCPClient(data NetcupProviderModel) (*client.Client, bool, error) {
 }
 
 func newSCPClient(data NetcupProviderModel) (*scpclient.Client, bool) {
-	hasSCP := !data.SCPAccessToken.IsNull()
+	hasSCP := !data.SCPAccessToken.IsNull() || !data.SCPRefreshToken.IsNull()
 	if !hasSCP {
 		return nil, false
 	}
