@@ -10,7 +10,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+      - '-s -w -X main.version={{.Version}}'
     goos:
       - freebsd
       - windows
@@ -18,7 +18,16 @@ builds:
       - darwin
     goarch:
       - amd64
+      - '386'
+      - arm
       - arm64
+    ignore:
+      - goos: darwin
+        goarch: '386'
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
     binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
   - formats:
@@ -36,6 +45,10 @@ signs:
       - "--batch"
       - "--local-user"
       - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--pinentry-mode"
+      - "loopback"
+      - "--passphrase"
+      - "{{ .Env.PASSPHRASE }}"
       - "--output"
       - "${signature}"
       - "--detach-sign"
