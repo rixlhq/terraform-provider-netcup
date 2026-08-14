@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.1.0...v1.1.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* **release:** trigger goreleaser on release:published and workflow_dispatch ([42a48ad](https://github.com/rixlhq/terraform-provider-netcup/commit/42a48ad47a27aebbf33e04cd7a81c58284efadaa))
+
 ## [1.1.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.0.0...v1.1.0) (2026-08-14)
 
 
