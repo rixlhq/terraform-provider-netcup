@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.2.0...v1.2.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* **release:** run release only after CI succeeds, force tag creation, fix version.go annotation ([7f30c83](https://github.com/rixlhq/terraform-provider-netcup/commit/7f30c83846378679a5b75fd49314c6927e3e7181))
+
 ## [1.2.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.1.1...v1.2.0) (2026-08-14)
 
 
