@@ -3,6 +3,7 @@
   "release-type": "simple",
   "include-v-in-tag": true,
   "include-component-in-tag": false,
+  "force-tag-creation": true,
   "packages": {
     ".": {
       "package-name": "terraform-provider-netcup",
