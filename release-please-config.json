@@ -8,8 +8,7 @@
     ".": {
       "package-name": "terraform-provider-netcup",
       "extra-files": [
-        "internal/version/version.go",
-        "version.txt"
+        "internal/version/version.go"
       ]
     }
   }
