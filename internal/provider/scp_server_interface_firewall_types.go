@@ -3,6 +3,8 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -144,4 +146,17 @@ func splitImportID(s string, n int) []string {
 		return nil
 	}
 	return parts
+}
+
+// parseServerMACImportID parses an import ID of the form 'server_id/mac'.
+func parseServerMACImportID(id string) (int64, string, error) {
+	parts := splitImportID(id, 2)
+	if len(parts) != 2 {
+		return 0, "", fmt.Errorf("expected 'server_id/mac', got %q", id)
+	}
+	serverID, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return 0, "", fmt.Errorf("server_id must be an integer: %w", err)
+	}
+	return serverID, parts[1], nil
 }

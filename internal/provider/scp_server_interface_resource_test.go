@@ -45,6 +45,12 @@ provider "netcup" {
 					resource.TestCheckResourceAttr("netcup_scp_server_interface.test", "speed_in_mbits", "1000"),
 				),
 			},
+			{
+				ResourceName:      "netcup_scp_server_interface.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "12345/00:11:22:33:44:55",
+			},
 		},
 	})
 }
@@ -132,6 +138,7 @@ func (m *scpServerInterfaceMock) handleGet(w http.ResponseWriter, _ *http.Reques
 		"mac":          m.mac,
 		"driver":       m.driver,
 		"speedInMBits": m.speed,
+		"vlanId":       m.vlanID,
 	}
 	m.mu.Unlock()
 
