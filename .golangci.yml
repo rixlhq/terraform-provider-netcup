@@ -34,7 +34,6 @@ linters:
     - gocritic # Provides diagnostics that check for bugs, performance and style issues. [auto-fix]
     - gocyclo # Computes and checks the cyclomatic complexity of functions. [fast]
     - godoclint # Checks Golang's documentation practice (godoc). [fast]
-    - goheader # Check if file header matches to pattern. [fast, auto-fix]
     - gomodguard_v2 # Allow and blocklist linter for direct Go module dependencies. [fast]
     - goprintffuncname # Checks that printf-like functions are named with `f` at the end. [fast]
     - gosmopolitan # Report certain i18n/l10n anti-patterns in your Go codebase.
