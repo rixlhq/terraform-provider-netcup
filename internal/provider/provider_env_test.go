@@ -62,3 +62,33 @@ func TestApplyEnvOverrides_noEnv(t *testing.T) {
 		t.Errorf("api_key: expected config value to be retained, got %q", got.APIKey.ValueString())
 	}
 }
+
+func TestNewClients_rejectsEmptyStrings(t *testing.T) {
+	empty := NetcupProviderModel{
+		APIKey:          types.StringValue(""),
+		APIPassword:     types.StringValue(""),
+		CustomerNumber:  types.StringValue(""),
+		SCPAccessToken:  types.StringValue(""),
+		SCPRefreshToken: types.StringValue(""),
+	}
+
+	if _, hasCCP, _ := newCCPClient(empty); hasCCP {
+		t.Errorf("newCCPClient: empty strings must not count as configured")
+	}
+	if _, hasSCP := newSCPClient(empty); hasSCP {
+		t.Errorf("newSCPClient: empty strings must not count as configured")
+	}
+
+	partial := NetcupProviderModel{
+		APIKey:          types.StringValue("key"),
+		APIPassword:     types.StringValue(""),
+		CustomerNumber:  types.StringValue("customer"),
+		SCPRefreshToken: types.StringValue("refresh"),
+	}
+	if _, hasCCP, _ := newCCPClient(partial); hasCCP {
+		t.Errorf("newCCPClient: partial empty credentials must not count as configured")
+	}
+	if _, hasSCP := newSCPClient(partial); !hasSCP {
+		t.Errorf("newSCPClient: non-empty refresh token must count as configured")
+	}
+}
