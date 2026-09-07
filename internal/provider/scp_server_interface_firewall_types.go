@@ -151,7 +151,7 @@ func splitImportID(s string, n int) []string {
 // parseServerMACImportID parses an import ID of the form 'server_id/mac'.
 func parseServerMACImportID(id string) (int64, string, error) {
 	parts := splitImportID(id, 2)
-	if len(parts) != 2 {
+	if len(parts) != 2 || parts[1] == "" {
 		return 0, "", fmt.Errorf("expected 'server_id/mac', got %q", id)
 	}
 	serverID, err := strconv.ParseInt(parts[0], 10, 64)
