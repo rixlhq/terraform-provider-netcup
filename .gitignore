@@ -24,3 +24,4 @@ go.work.sum
 .terraform.lock.hcl
 terraform.rc
 terraform.d/
+.omo/

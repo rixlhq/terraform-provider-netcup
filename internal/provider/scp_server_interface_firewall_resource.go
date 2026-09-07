@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -136,20 +135,14 @@ func (r *ScpServerInterfaceFirewallResource) Delete(ctx context.Context, req res
 }
 
 func (r *ScpServerInterfaceFirewallResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := splitImportID(req.ID, 2)
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Invalid Import ID", "expected 'server_id/mac'")
-		return
-	}
-
-	serverID, err := strconv.ParseInt(parts[0], 10, 64)
+	serverID, mac, err := parseServerMACImportID(req.ID)
 	if err != nil {
-		resp.Diagnostics.AddError("Invalid Import ID", "server_id must be an integer")
+		resp.Diagnostics.AddError("Invalid Import ID", err.Error())
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("server_id"), serverID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), mac)...)
 }
 
 func (r *ScpServerInterfaceFirewallResource) saveFirewall(ctx context.Context, data scpServerInterfaceFirewallResourceModel) error {

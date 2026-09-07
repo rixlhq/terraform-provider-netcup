@@ -2,7 +2,7 @@ terraform {
   required_providers {
     netcup = {
       source  = "rixlhq/netcup"
-      version = "~> 0.1"
+      version = "~> 1.0"
     }
   }
 }

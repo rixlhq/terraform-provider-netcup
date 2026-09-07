@@ -4,8 +4,8 @@ A Terraform provider for managing resources at [netcup](https://www.netcup.com).
 It supports both the **Customer Control Panel (CCP) DNS API** and the **Server Control Panel (SCP) REST API**.
 
 - DNS records and zones are managed through the CCP JSON API.
-- Servers, networks, snapshots, ISOs, tasks, users, and other SCP resources are
-  exposed as data sources using the SCP OpenAPI specification.
+- Servers, interfaces, firewalls, snapshots, ISOs, tasks, users, and other SCP resources are
+  exposed as resources and data sources using the SCP OpenAPI specification.
 
 ## Requirements
 
@@ -17,7 +17,7 @@ It supports both the **Customer Control Panel (CCP) DNS API** and the **Server C
 
 Configure the credentials for the APIs you want to use. CCP credentials are
 required for DNS resources, and either an SCP access token or refresh token is
-required for SCP data sources. Both SCP token types can be configured at the
+required for SCP resources and data sources. Both SCP token types can be configured at the
 same time.
 
 ```hcl
@@ -25,7 +25,7 @@ terraform {
   required_providers {
     netcup = {
       source  = "rixlhq/netcup"
-      version = "~> 0.1"
+      version = "~> 1.0"
     }
   }
 }
@@ -404,6 +404,37 @@ resource "netcup_scp_task_action" "cancel" {
 }
 ```
 
+### `netcup_scp_server_interface`
+
+Manages a network interface for an SCP server. The interface is created
+with a VLAN and network driver; the MAC address is returned by the SCP
+task result and used as the Terraform ID. Import via `server_id/mac`.
+
+```hcl
+resource "netcup_scp_server_interface" "example" {
+  server_id      = 12345
+  vlan_id        = 100
+  network_driver = "virtio"
+}
+```
+
+### `netcup_scp_server_interface_firewall`
+
+Manages the firewall configuration for a server network interface.
+Deleting the resource deactivates the firewall (`active = false`) since
+the SCP API has no delete endpoint. Import via `server_id/mac`.
+
+```hcl
+resource "netcup_scp_server_interface_firewall" "example" {
+  server_id = 12345
+  mac       = "00:50:56:00:00:01"
+  active    = true
+
+  copied_policy_ids = [1, 2]
+  user_policy_ids   = [10]
+}
+```
+
 ## Limitations
 
 - Netcup does not support per-record TTLs; TTL is set per zone. Use
@@ -412,6 +443,8 @@ resource "netcup_scp_task_action" "cancel" {
   within an existing zone can be managed.
 - SCP servers, failover IPs and VLANs cannot be created or deleted through the
   SCP API. Use the corresponding resources to adopt and update existing objects.
+- `netcup_scp_server_interface_firewall` has no delete endpoint in the SCP
+  API; destroying the resource deactivates the firewall instead.
 
 ## Publishing to the Terraform Registry
 
@@ -423,9 +456,11 @@ consume.
 - `terraform-registry-manifest.json` declares protocol version `6.0`.
 - `.goreleaser.yml` builds cross-platform archives, a SHA256 checksum file, a
 detached GPG signature, and renames the manifest to the required asset name.
-- `.github/workflows/ci.yml` runs lint, test, and build in parallel on every
-  push and pull request, then runs `goreleaser/goreleaser-action` to create a
-  signed release only on `v*` tags after CI passes.
+- `.github/workflows/ci.yml` runs lint, test, and build in parallel steps on every
+  push and pull request.
+- `.github/workflows/release.yml` runs release-please on successful CI, then
+  runs `goreleaser/goreleaser-action` to create a signed release when a
+  release is created.
 
 To publish:
 1. Generate a GPG signing key and add the public key to the Terraform Registry.
@@ -433,7 +468,8 @@ To publish:
    `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE`.
 3. Create the provider in the Terraform Registry, point it at this GitHub
    repository, and configure the webhook if needed.
-4. Push a semantic version tag such as `v0.1.0`.
+4. Merge a conventional commit to `main`; release-please opens a release PR
+   and tags the release (e.g. `v1.2.1`) on merge.
 
 ## Development
 

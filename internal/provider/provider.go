@@ -138,8 +138,16 @@ func envOrString(v types.String, env string) types.String {
 	return v
 }
 
+// isConfigured reports whether a provider credential holds a usable value.
+// Explicit empty strings must not count as configured: otherwise
+// `scp_access_token = ""` would create an SCP client with an empty bearer
+// token instead of falling through to the missing-credentials error.
+func isConfigured(v types.String) bool {
+	return !v.IsNull() && !v.IsUnknown() && v.ValueString() != ""
+}
+
 func newCCPClient(data NetcupProviderModel) (*client.Client, bool, error) {
-	hasCCP := !data.APIKey.IsNull() && !data.APIPassword.IsNull() && !data.CustomerNumber.IsNull()
+	hasCCP := isConfigured(data.APIKey) && isConfigured(data.APIPassword) && isConfigured(data.CustomerNumber)
 	if !hasCCP {
 		return nil, false, nil
 	}
@@ -163,7 +171,7 @@ func newCCPClient(data NetcupProviderModel) (*client.Client, bool, error) {
 }
 
 func newSCPClient(data NetcupProviderModel) (*scpclient.Client, bool) {
-	hasSCP := !data.SCPAccessToken.IsNull() || !data.SCPRefreshToken.IsNull()
+	hasSCP := isConfigured(data.SCPAccessToken) || isConfigured(data.SCPRefreshToken)
 	if !hasSCP {
 		return nil, false
 	}

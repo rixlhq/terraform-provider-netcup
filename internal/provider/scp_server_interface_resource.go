@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -15,6 +16,7 @@ import (
 )
 
 var _ resource.Resource = &ScpServerInterfaceResource{}
+var _ resource.ResourceWithImportState = &ScpServerInterfaceResource{}
 
 type ScpServerInterfaceResource struct {
 	client *scpclient.Client
@@ -147,7 +149,7 @@ func (r *ScpServerInterfaceResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	plan.Mac = types.StringValue(iface.Mac)
-	plan.ID = types.StringValue(iface.Mac)
+	plan.ID = plan.Mac
 	if iface.SpeedInMBits != 0 {
 		plan.SpeedInMbits = types.Int64Value(iface.SpeedInMBits)
 	}
@@ -185,6 +187,13 @@ func (r *ScpServerInterfaceResource) Read(ctx context.Context, req resource.Read
 	}
 
 	state.Mac = types.StringValue(iface.Mac)
+	state.ID = state.Mac
+	if iface.VlanId != 0 {
+		state.VlanId = types.Int64Value(iface.VlanId)
+	}
+	if iface.Driver != "" {
+		state.NetworkDriver = types.StringValue(iface.Driver)
+	}
 	if iface.SpeedInMBits != 0 {
 		state.SpeedInMbits = types.Int64Value(iface.SpeedInMBits)
 	}
@@ -258,4 +267,15 @@ func (r *ScpServerInterfaceResource) Delete(ctx context.Context, req resource.De
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
 		return
 	}
+}
+
+func (r *ScpServerInterfaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	serverID, mac, err := parseServerMACImportID(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid Import ID", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("server_id"), serverID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), mac)...)
 }
