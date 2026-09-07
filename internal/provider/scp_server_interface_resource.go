@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -14,7 +16,10 @@ import (
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
 
-var _ resource.Resource = &ScpServerInterfaceResource{}
+var (
+	_ resource.Resource                = &ScpServerInterfaceResource{}
+	_ resource.ResourceWithImportState = &ScpServerInterfaceResource{}
+)
 
 type ScpServerInterfaceResource struct {
 	client *scpclient.Client
@@ -258,4 +263,21 @@ func (r *ScpServerInterfaceResource) Delete(ctx context.Context, req resource.De
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
 		return
 	}
+}
+
+func (r *ScpServerInterfaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts := splitImportID(req.ID, 2)
+	if len(parts) != 2 {
+		resp.Diagnostics.AddError("Invalid Import ID", "expected 'server_id/mac'")
+		return
+	}
+
+	serverID, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid Import ID", "server_id must be an integer")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("server_id"), serverID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), parts[1])...)
 }

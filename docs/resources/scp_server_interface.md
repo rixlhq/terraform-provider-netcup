@@ -34,3 +34,13 @@ resource "netcup_scp_server_interface" "example" {
 - `id` (String) Terraform identifier for this network interface (the MAC address).
 - `mac` (String) MAC address assigned to this interface by the SCP API.
 - `speed_in_mbits` (Number) Interface speed in MBit/s reported by the SCP API.
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# terraform import netcup_scp_server_interface.example 12345/00:50:56:00:00:01
+```
