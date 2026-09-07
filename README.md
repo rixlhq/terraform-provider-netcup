@@ -456,7 +456,7 @@ consume.
 - `terraform-registry-manifest.json` declares protocol version `6.0`.
 - `.goreleaser.yml` builds cross-platform archives, a SHA256 checksum file, a
 detached GPG signature, and renames the manifest to the required asset name.
-- `.github/workflows/ci.yml` runs lint, test, and build as separate jobs on every
+- `.github/workflows/ci.yml` runs lint, test, and build in parallel steps on every
   push and pull request.
 - `.github/workflows/release.yml` runs release-please on successful CI, then
   runs `goreleaser/goreleaser-action` to create a signed release when a
