@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"sync"
 	"testing"
 
@@ -95,6 +96,12 @@ func (m *firewallPolicyMock) normalizeRules(in []any) []map[string]any {
 		rule, ok := r.(map[string]any)
 		if !ok {
 			continue
+		}
+		// The real API stores sources and destinations as sets
+		for _, key := range []string{"sources", "destinations"} {
+			if items, ok := rule[key].([]any); ok {
+				slices.Reverse(items)
+			}
 		}
 		out = append(out, rule)
 	}

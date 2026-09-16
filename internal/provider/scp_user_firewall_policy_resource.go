@@ -21,11 +21,11 @@ var scpUserFirewallPolicyRulesAttributes = map[string]schema.Attribute{
 		Computed:    true,
 		Description: "Destination port or range.",
 	},
-	"destinations": schema.ListAttribute{
+	"destinations": schema.SetAttribute{
 		ElementType: types.StringType,
 		Optional:    true,
 		Computed:    true,
-		Description: "Destination CIDRs/addresses.",
+		Description: "Destination CIDRs/addresses. Unordered, matching the SCP API.",
 	},
 	"direction": schema.StringAttribute{
 		Required:    true,
@@ -45,11 +45,11 @@ var scpUserFirewallPolicyRulesAttributes = map[string]schema.Attribute{
 		Computed:    true,
 		Description: "Source port or range.",
 	},
-	"sources": schema.ListAttribute{
+	"sources": schema.SetAttribute{
 		ElementType: types.StringType,
 		Optional:    true,
 		Computed:    true,
-		Description: "Source CIDRs/addresses.",
+		Description: "Source CIDRs/addresses. Unordered, matching the SCP API.",
 	},
 }
 
