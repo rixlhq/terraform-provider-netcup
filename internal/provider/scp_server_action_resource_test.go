@@ -56,6 +56,40 @@ resource "netcup_scp_server_action" "test" {
 	})
 }
 
+// TestAccScpServerAction_rescueActivate covers an action whose request has no
+// body. The real SCP API rejects such requests with HTTP 400
+// error.content.type.invalid when the Content-Type header is missing, so the
+// mock does the same.
+func TestAccScpServerAction_rescueActivate(t *testing.T) {
+	server := newServerActionMockServer(t)
+	defer server.Close()
+
+	providerConfig := fmt.Sprintf(`
+provider "netcup" {
+  scp_access_token = "mock-token"
+  scp_base_url     = "%s/scp-core"
+}
+`, server.URL)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + `
+resource "netcup_scp_server_action" "test" {
+  server_id = 12345
+  action    = "rescue_activate"
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("netcup_scp_server_action.test", "action", "rescue_activate"),
+					resource.TestCheckResourceAttrSet("netcup_scp_server_action.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 type serverActionMock struct {
 	mu      sync.Mutex
 	actions []string
@@ -85,12 +119,38 @@ func (m *serverActionMock) handleAction(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// handleRescue mirrors POST /api/v1/servers/{id}/rescuesystem, which takes no
+// request body but still requires a Content-Type header.
+func (m *serverActionMock) handleRescue(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if r.Header.Get("Content-Type") == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"code":"error.content.type.invalid","message":"The HTTP header Content-Type must be 'type/subtype'"}`))
+		return
+	}
+
+	m.mu.Lock()
+	m.actions = append(m.actions, "rescue_activate")
+	m.mu.Unlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	if err := json.NewEncoder(w).Encode(map[string]any{"uuid": "task-rescue-1", "state": taskStateFinished}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func newServerActionMockServer(t *testing.T) *httptest.Server {
 	t.Helper()
 
 	mock := &serverActionMock{}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/scp-core/api/v1/servers/12345", mock.handleAction)
+	mux.HandleFunc("/scp-core/api/v1/servers/12345/rescuesystem", mock.handleRescue)
 
 	return httptest.NewServer(mux)
 }

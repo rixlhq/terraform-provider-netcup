@@ -120,13 +120,13 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 	if accessToken != "" {
 		req.Header.Set("Authorization", "Bearer "+accessToken)
 	}
-	if body != nil {
-		switch method {
-		case http.MethodPatch:
-			req.Header.Set("Content-Type", "application/merge-patch+json")
-		default:
-			req.Header.Set("Content-Type", "application/json")
-		}
+	// The SCP API requires Content-Type on every write, including requests
+	// without a body (e.g. POST .../rescuesystem), so set it by method.
+	switch method {
+	case http.MethodPatch:
+		req.Header.Set("Content-Type", "application/merge-patch+json")
+	case http.MethodPost, http.MethodPut, http.MethodDelete:
+		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
 
