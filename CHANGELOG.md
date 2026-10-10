@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.2.1...v1.3.0) (2026-10-10)
+
+
+### Features
+
+* **interface:** support import for scp_server_interface ([ca78a24](https://github.com/rixlhq/terraform-provider-netcup/commit/ca78a2457b8df595a44f3f48334c503df6aa0701))
+
+
+### Bug Fixes
+
+* **import:** reject empty MAC in server interface import IDs ([95bdb4b](https://github.com/rixlhq/terraform-provider-netcup/commit/95bdb4bb5b91fc433ad35eb604198cf21908ade2))
+* **interface:** populate full state on refresh for import ([f6f3b8a](https://github.com/rixlhq/terraform-provider-netcup/commit/f6f3b8a4ff62d85d5b4cacc0b369f0aaa7bde6e6))
+* **provider:** treat empty-string credentials as unconfigured ([06da876](https://github.com/rixlhq/terraform-provider-netcup/commit/06da87691cbe2f37f939b1d1e45a9a77f308a4d4))
+* **review:** harden CI permissions and align example versions ([35a3bbf](https://github.com/rixlhq/terraform-provider-netcup/commit/35a3bbf4bd373b41c70227289ceb2d4c5d835e8c))
+
 ## [1.2.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.2.0...v1.2.1) (2026-08-14)
 
 
