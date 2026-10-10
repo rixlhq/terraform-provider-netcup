@@ -1,4 +1,5 @@
 [tools]
+jactionlint = "2.0.2"
 go = "1.26.5"
 terraform = "1.15.8"
 golangci-lint = "2.12.2"
