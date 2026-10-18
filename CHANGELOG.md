@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.3.0...v1.3.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **firewall:** model rule addresses as sets ([#27](https://github.com/rixlhq/terraform-provider-netcup/issues/27)) ([0e89ffc](https://github.com/rixlhq/terraform-provider-netcup/commit/0e89ffcf8298cfb3815843b69bc19d18168c9174))
+* **scp:** set Content-Type on bodyless requests ([#26](https://github.com/rixlhq/terraform-provider-netcup/issues/26)) ([def4788](https://github.com/rixlhq/terraform-provider-netcup/commit/def47885555b375f50228c3f1c2c1996d4aed21c))
+
 ## [1.3.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.2.1...v1.3.0) (2026-10-10)
 
 
