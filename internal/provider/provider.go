@@ -45,7 +45,7 @@ func (p *NetcupProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *NetcupProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Terraform provider for managing netcup infrastructure via the CloudDNS REST API and SCP REST API (Server Control Panel OpenAPI). Supports CloudDNS records and domains, virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4/IPv6), network interfaces, firewall policies, snapshots, failover IPs, VLANs, custom images, ISOs, provider-defined functions, and ephemeral tokens under Terraform Plugin Framework protocol version 6.",
+		MarkdownDescription: "Terraform provider for managing netcup infrastructure via the CloudDNS REST API (modern replacement for the netcup Customer Control Panel / CCP DNS API) and SCP REST API (Server Control Panel OpenAPI). Supports CloudDNS records and domains, virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4/IPv6), network interfaces, firewall policies, snapshots, failover IPs, VLANs, custom images, ISOs, provider-defined functions, and ephemeral tokens under Terraform Plugin Framework protocol version 6.",
 		Attributes: map[string]schema.Attribute{
 			"clouddns_api_key":  schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "CloudDNS bearer API key from CCP Master Data > API > API Keys. Can be set via `NETCUP_CLOUDDNS_API_KEY`."},
 			"clouddns_base_url": schema.StringAttribute{Optional: true, MarkdownDescription: "Override the CloudDNS API base URL (default https://api.netcup.com). Can be set via `NETCUP_CLOUDDNS_BASE_URL`."},

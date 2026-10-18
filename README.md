@@ -7,13 +7,14 @@
 
 A [Terraform](https://www.terraform.io) provider for managing infrastructure at [netcup](https://www.netcup.com) via official netcup REST APIs:
 
-- **CloudDNS REST API** (Bearer API) — manage DNS records and query domain metadata with atomic changesets.
+- **CloudDNS REST API** (Bearer API) — modern replacement for the legacy Customer Control Panel (CCP) DomainWebservice DNS API; manage DNS records and query domain metadata with atomic changesets.
 - **Server Control Panel (SCP) REST API** (OpenAPI / OAuth 2.0) — manage virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4 & IPv6), network interfaces, VLANs, failover IPs, firewall policies, snapshots, custom disk images, and ISOs.
 
 Built with the modern **Terraform Plugin Framework** (protocol version 6), supporting ephemeral token exchange (`netcup_scp_access_token`) and provider functions (`provider::netcup::ip_version`).
 
 > [!TIP]
-> Migrating existing DNS configurations from older CCP setups? See the [CloudDNS Migration Guide](docs/guides/migrating-to-clouddns.md) for step-by-step instructions and zero-downtime import syntax.
+> **Looking for Customer Control Panel (CCP) DNS API support?**
+> Netcup has transitioned from the legacy CCP SOAP/JSON API (`DomainWebservice`) to the modern, high-performance **CloudDNS REST API**. This provider integrates directly with the CloudDNS REST API. If you have existing DNS records created under the CCP, see the [CloudDNS Migration Guide](docs/guides/migrating-to-clouddns.md) for step-by-step instructions on activating CloudDNS and importing records into Terraform with zero downtime.
 
 ## Requirements
 
