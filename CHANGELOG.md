@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v2.0.0...v2.1.0) (2026-10-18)
+
+
+### Features
+
+* enhance SCP error details, deprecate maintenance, validate snapshots, and add server backup time & state ([#43](https://github.com/rixlhq/terraform-provider-netcup/issues/43)) ([10802ad](https://github.com/rixlhq/terraform-provider-netcup/commit/10802ad98d9a006ef72aab08c00cdc0123b38b47))
+
 ## [2.0.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.4.0...v2.0.0) (2026-10-18)
 
 
