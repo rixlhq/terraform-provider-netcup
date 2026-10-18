@@ -1,10 +1,10 @@
 [tools]
-jactionlint = "2.0.2"
-go = "1.26.5"
-terraform = "1.15.8"
-golangci-lint = "2.12.2"
-lefthook = "2.1.10"
-"ubi:goreleaser/goreleaser" = "2.17.1"
+jactionlint = "2.2.0"
+go = "1.26"
+terraform = "1.16.6"
+golangci-lint = "2.15.0"
+lefthook = "2.2.2"
+"ubi:goreleaser/goreleaser" = "2.18.3"
 "go:github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs" = "v0.25.0"
 
 [hooks]

@@ -13,6 +13,9 @@ It supports both the **Customer Control Panel (CCP) DNS API** and the **Server C
 - [Go](https://go.dev/doc/install) >= 1.26
 - [mise](https://mise.jdx.dev/) (recommended for running tasks and installing tools)
 
+Mise tracks the Go `1.26` release line. Run `mise upgrade go` to install the
+latest patch; CI and release builds select the latest `1.26.x` patch automatically.
+
 ## Provider Configuration
 
 Configure the credentials for the APIs you want to use. CCP credentials are

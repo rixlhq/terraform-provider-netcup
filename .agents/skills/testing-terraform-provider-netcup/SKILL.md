@@ -8,13 +8,15 @@ description: |
 
 ## Required toolchain
 
-The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, golangci-lint, lefthook, `goreleaser`, and `tfplugindocs`. `mise.toml` currently pins `terraform = "1.15.8"` and `goreleaser = "2.17.1"`.
+The project uses [mise](https://mise.jdx.dev/). Run `mise install` from the repo root to install Go, Terraform, golangci-lint, lefthook, `goreleaser`, and `tfplugindocs`. `mise.toml` currently pins `terraform = "1.16.6"` and `goreleaser = "2.18.3"`.
 
 If mise is not on `PATH`, it was installed for this session at `~/.local/bin/mise`:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
+
+Go follows the `1.26` release line. Run `mise upgrade go` to refresh the installed patch version; `mise exec` can reuse an already installed matching version.
 
 The system `go` (`/usr/bin/go`) and `terraform` (`/usr/bin/terraform`) are too old and should not be used. Mise installs the correct versions via `mise.toml`.
 
@@ -73,7 +75,7 @@ Important: when dev overrides are active, `terraform init` may fail to resolve t
 Use the mise-managed Terraform binary. Because the system `/usr/bin/terraform` may shadow the mise shim in this environment, use the direct install path:
 
 ```bash
-~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+~/.local/share/mise/installs/terraform/1.16.6/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
 ## Start a local mock SCP API
@@ -112,7 +114,7 @@ Run with:
 
 ```bash
 export TF_CLI_CONFIG_FILE=/tmp/tftest/terraform.rc
-~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
+~/.local/share/mise/installs/terraform/1.16.6/terraform -chdir=/tmp/tftest apply -auto-approve -input=false
 ```
 
 ## Environment-variable credential fallback
@@ -130,9 +132,9 @@ export TF_CLI_CONFIG_FILE=/tmp/tftest_env/terraform.rc
 export NETCUP_SCP_ACCESS_TOKEN='env-token'
 export NETCUP_SCP_BASE_URL='http://127.0.0.1:<MOCK_PORT>/scp-core'
 
-~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env apply -auto-approve
-~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env plan
-~/.local/share/mise/installs/terraform/1.15.8/terraform -chdir=/tmp/tftest_env destroy -auto-approve
+~/.local/share/mise/installs/terraform/1.16.6/terraform -chdir=/tmp/tftest_env apply -auto-approve
+~/.local/share/mise/installs/terraform/1.16.6/terraform -chdir=/tmp/tftest_env plan
+~/.local/share/mise/installs/terraform/1.16.6/terraform -chdir=/tmp/tftest_env destroy -auto-approve
 ```
 
 Pass criteria:
