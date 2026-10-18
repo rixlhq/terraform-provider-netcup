@@ -8,6 +8,8 @@ terraform {
 }
 
 provider "netcup" {
+  clouddns_api_key = var.netcup_clouddns_api_key
+
   api_key         = var.netcup_api_key
   api_password    = var.netcup_api_password
   customer_number = var.netcup_customer_number

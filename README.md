@@ -7,6 +7,7 @@
 
 A [Terraform](https://www.terraform.io) provider for managing infrastructure at [netcup](https://www.netcup.com) via official netcup APIs:
 
+- **CloudDNS REST API** (Bearer API) — manage individual CloudDNS records and read domain metadata.
 - **Customer Control Panel (CCP) DNS API / DomainWebservice** (JSON API) — manage DNS zones and individual DNS records.
 - **Server Control Panel (SCP) REST API** (OpenAPI / OAuth 2.0) — manage virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4 & IPv6), network interfaces, VLANs, failover IPs, firewall policies, snapshots, custom disk images, and ISOs.
 
@@ -22,7 +23,8 @@ Built with the modern **Terraform Plugin Framework** (protocol version 6), suppo
 
 | Category | API | Resources | Data Sources |
 | :--- | :--- | :--- | :--- |
-| **DNS** | CCP DNS API | `netcup_dns_record`, `netcup_dns_zone` | `netcup_dns_records`, `netcup_dns_zone` |
+| **CloudDNS** | CloudDNS REST API | `netcup_clouddns_record` | `netcup_clouddns_domain` |
+| **DNS (Legacy CCP)** | CCP DNS API | `netcup_dns_record`, `netcup_dns_zone` | `netcup_dns_records`, `netcup_dns_zone` |
 | **Servers** | SCP REST API | `netcup_scp_server`, `netcup_scp_server_action` | `netcup_scp_server`, `netcup_scp_servers`, `netcup_scp_server_metrics`, `netcup_scp_server_logs` |
 | **Networking & rDNS** | SCP REST API | `netcup_scp_rdns`, `netcup_scp_server_interface`, `netcup_scp_failover_ip_v4`, `netcup_scp_failover_ip_v6`, `netcup_scp_user_vlan` | `netcup_scp_rdns_ipv4`, `netcup_scp_rdns_ipv6`, `netcup_scp_server_interface`, `netcup_scp_server_interfaces`, `netcup_scp_user_failoverips_v4`, `netcup_scp_user_failoverips_v6`, `netcup_scp_user_vlan`, `netcup_scp_user_vlans`, `netcup_scp_vlan` |
 | **Firewall** | SCP REST API | `netcup_scp_user_firewall_policy`, `netcup_scp_server_interface_firewall` | `netcup_scp_user_firewall_policy`, `netcup_scp_user_firewall_policies` |
@@ -33,7 +35,7 @@ Built with the modern **Terraform Plugin Framework** (protocol version 6), suppo
 ## Provider Configuration
 
 Configure the credentials for the APIs you want to use. CCP credentials are
-required for DNS resources, and either an SCP access token or refresh token is
+required for `netcup_dns_*`, a CloudDNS API key for `netcup_clouddns_*`, and either an SCP access token or refresh token is
 required for SCP resources and data sources. Both SCP token types can be configured at the
 same time.
 
@@ -48,6 +50,8 @@ terraform {
 }
 
 provider "netcup" {
+  clouddns_api_key = var.netcup_clouddns_api_key # optional: CloudDNS domains
+
   api_key         = "my-api-key"
   api_password    = "my-api-password"
   customer_number = "123456"
@@ -57,7 +61,8 @@ provider "netcup" {
 }
 ```
 
-CCP credentials are generated in the netcup Customer Control Panel under **Master Data > API**.
+CloudDNS keys are generated in **CCP > Master Data > API > API Keys**.
+Legacy CCP credentials come from **Legacy API Keys** in the same section.
 SCP tokens are generated via the netcup SCP device-code OAuth flow.
 
 ## Protocol Version 6 Features
@@ -100,9 +105,49 @@ API** with `api_key`, `api_password`, and `customer_number`. SCP access and
 refresh tokens authorize server operations and cannot be used for DNS requests.
 
 Domains using **CloudDNS** require the separate [netcup API](https://www.netcup.com/en/helpcenter/documentation/general/netcup-api),
-which this provider does not yet implement. CloudDNS API keys cannot be used
-as legacy CCP credentials. Check the domain's DNS or CloudDNS tab in the CCP
-before configuring the provider.
+using `clouddns_api_key` or `NETCUP_CLOUDDNS_API_KEY`. Use the dedicated
+`netcup_clouddns_*` resource and data sources. Check the domain's DNS or
+CloudDNS tab in the CCP before choosing the API.
+
+## CloudDNS resources and data sources
+
+`netcup_clouddns_record` manages a single record with strict, automatically
+committed changesets. An update deletes the previous record and creates its
+replacement in one changeset; unrelated records are preserved. Existing records
+must be imported, and system-managed immutable records cannot be changed.
+Do not manage the same record from multiple Terraform resources.
+
+```hcl
+# Supply NETCUP_CLOUDDNS_API_KEY through your secret manager.
+provider "netcup" {}
+
+data "netcup_clouddns_domains" "all" {}
+
+resource "netcup_clouddns_record" "www" {
+  domain_id = one([
+    for domain in data.netcup_clouddns_domains.all.domains : domain.id
+    if domain.fqdn == "example.com" && domain.is_dns_managed
+  ])
+  name  = "www"
+  type  = "A"
+  rdata = "192.0.2.10"
+  ttl   = 300
+}
+
+data "netcup_clouddns_records" "example" {
+  domain_id = netcup_clouddns_record.www.domain_id
+  depends_on = [netcup_clouddns_record.www]
+}
+```
+
+`rdata` follows the API's DNS presentation format: MX includes the priority
+(e.g. `10 mail.example.com.`), and SRV includes priority, weight, port, and target.
+TTL is required and must be at least one second. Data sources preserve null TTLs
+on system records. Reads select the active revision and never create drafts.
+
+Import with `terraform import netcup_clouddns_record.www 'domain_id/record_identifier'`.
+Record identifiers are available in `netcup_clouddns_records`. CloudDNS support
+does not register domains or migrate legacy DNS zones.
 
 ## CCP DNS Resources
 
