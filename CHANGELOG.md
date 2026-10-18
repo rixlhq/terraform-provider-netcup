@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.4.0...v2.0.0) (2026-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* The deprecated legacy CCP DNS API (DomainWebservice JSON API) and its resources/data sources (`netcup_dns_record`, `netcup_dns_zone`, `netcup_dns_records`) have been completely removed. Provider configuration attributes `api_key`, `api_password`, `customer_number`, and `endpoint` are removed. DNS is now managed exclusively via the modern netcup CloudDNS REST API (`clouddns_api_key`). Added composite import support (`domain_id/name/type/rdata`) for `netcup_clouddns_record` and a comprehensive CloudDNS migration guide in docs/guides/migrating-to-clouddns.md.
+
+### Features
+
+* remove legacy CCP DNS API and add CloudDNS migration support ([#39](https://github.com/rixlhq/terraform-provider-netcup/issues/39)) ([94fc0a1](https://github.com/rixlhq/terraform-provider-netcup/commit/94fc0a1ce6c1eff9c87b3d5b72c27f69ce3c7a3d))
+
 ## [1.4.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.3.1...v1.4.0) (2026-10-18)
 
 
