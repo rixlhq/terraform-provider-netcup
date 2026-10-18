@@ -13,21 +13,19 @@ import (
 
 func TestProviderCredentials(t *testing.T) {
 	tests := map[string]struct {
+		cloudKey     any
 		accessToken  any
 		refreshToken any
 		wantErr      bool
 	}{
+		"CloudDNS key only configures provider": {cloudKey: "cloud-key"},
 		"refresh token only configures SCP": {
 			refreshToken: "refresh-token",
 		},
 		"access token only configures SCP": {
 			accessToken: "access-token",
 		},
-		"neither CCP nor SCP credentials": {
-			accessToken:  nil,
-			refreshToken: nil,
-			wantErr:      true,
-		},
+		"no credentials": {wantErr: true},
 	}
 
 	for name, test := range tests {
@@ -38,6 +36,8 @@ func TestProviderCredentials(t *testing.T) {
 			p.Schema(ctx, frameworkprovider.SchemaRequest{}, &schemaResponse)
 
 			raw := tftypes.NewValue(schemaResponse.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
+				"clouddns_api_key":  stringValue(test.cloudKey),
+				"clouddns_base_url": stringValue(nil),
 				"api_key":           stringValue(nil),
 				"api_password":      stringValue(nil),
 				"customer_number":   stringValue(nil),
