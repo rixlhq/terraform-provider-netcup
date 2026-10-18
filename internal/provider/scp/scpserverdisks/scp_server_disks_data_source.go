@@ -85,5 +85,5 @@ func (d *ScpServerDisksDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

@@ -85,5 +85,5 @@ func (d *ScpUserImagePartDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

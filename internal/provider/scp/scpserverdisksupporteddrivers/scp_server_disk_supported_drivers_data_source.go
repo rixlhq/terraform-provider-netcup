@@ -85,5 +85,5 @@ func (d *ScpServerDiskSupportedDriversDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

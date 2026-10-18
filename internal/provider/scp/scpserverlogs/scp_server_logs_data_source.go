@@ -93,5 +93,5 @@ func (d *ScpServerLogsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

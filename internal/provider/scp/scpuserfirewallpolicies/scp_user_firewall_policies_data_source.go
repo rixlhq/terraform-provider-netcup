@@ -96,5 +96,5 @@ func (d *ScpUserFirewallPoliciesDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

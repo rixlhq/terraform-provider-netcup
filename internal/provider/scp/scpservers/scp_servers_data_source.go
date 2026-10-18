@@ -83,7 +83,16 @@ func (d *ScpServersDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	body, err := d.client.Get(ctx, "/api/v1/servers", scpServersQuery(data))
+	query := scpServersQuery(data)
+	if !data.Sort.IsNull() && !data.Sort.IsUnknown() {
+		var sort []string
+		resp.Diagnostics.Append(data.Sort.ElementsAs(ctx, &sort, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		query["sort"] = sort
+	}
+	body, err := d.client.Get(ctx, "/api/v1/servers", query)
 	if err != nil {
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
 		return
@@ -107,5 +116,5 @@ func (d *ScpServersDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

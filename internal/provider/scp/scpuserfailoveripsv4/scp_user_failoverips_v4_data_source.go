@@ -93,5 +93,5 @@ func (d *ScpUserFailoveripsV4DataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }

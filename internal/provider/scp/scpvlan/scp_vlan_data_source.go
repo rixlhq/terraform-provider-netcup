@@ -85,5 +85,5 @@ func (d *ScpVlanDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	resp.State.Raw = tfVal
+	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
 }
