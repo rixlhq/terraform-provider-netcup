@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -22,7 +23,7 @@ func TestSCPDataSourcesPreserveInputs(t *testing.T) {
 		source := factory()
 		var metadata datasource.MetadataResponse
 		source.Metadata(t.Context(), datasource.MetadataRequest{ProviderTypeName: "netcup"}, &metadata)
-		if metadata.TypeName == "netcup_dns_records" || metadata.TypeName == "netcup_dns_zone" {
+		if !strings.HasPrefix(metadata.TypeName, "netcup_scp_") {
 			continue
 		}
 		t.Run(metadata.TypeName, func(t *testing.T) { t.Parallel(); checkSCPDataSourceInputs(t, source) })
