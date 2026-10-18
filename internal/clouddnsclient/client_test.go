@@ -65,6 +65,27 @@ func TestCloudDNSLists(t *testing.T) {
 	}
 }
 
+func TestCloudDNSListEmpty404(t *testing.T) {
+	t.Parallel()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"success":false,"errors":[{"code":"resourceDoesNotExist","message":"No results found, the page number may be too high."}],"messages":[],"meta":null,"result":null}`))
+	}))
+	defer server.Close()
+	c, err := clouddnsclient.New("cloud-key", server.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	domains, err := c.Domains(t.Context())
+	if err != nil {
+		t.Fatalf("expected nil error on 404 empty list, got: %v", err)
+	}
+	if len(domains) != 0 {
+		t.Fatalf("expected 0 domains, got: %d", len(domains))
+	}
+}
+
 func TestCloudDNSChangeset(t *testing.T) {
 	t.Parallel()
 	old := clouddnsclient.RecordInput{Name: "www", Type: "A", RData: "192.0.2.1", TTL: 300}

@@ -91,6 +91,10 @@ func list[T any](ctx context.Context, c *Client, path string) ([]T, error) {
 		}
 		response, err := c.request(ctx, http.MethodGet, requestPath, nil)
 		if err != nil {
+			var apiErr *APIError
+			if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound && page == 1 {
+				return nil, nil
+			}
 			return nil, err
 		}
 		var entries []T
