@@ -23,7 +23,7 @@ Built with the modern **Terraform Plugin Framework** (protocol version 6), suppo
 
 | Category | API | Resources | Data Sources |
 | :--- | :--- | :--- | :--- |
-| **CloudDNS** | CloudDNS REST API | `netcup_clouddns_record` | `netcup_clouddns_domain` |
+| **CloudDNS** | CloudDNS REST API | `netcup_clouddns_record` | `netcup_clouddns_domains`, `netcup_clouddns_records` |
 | **DNS (Legacy CCP)** | CCP DNS API | `netcup_dns_record`, `netcup_dns_zone` | `netcup_dns_records`, `netcup_dns_zone` |
 | **Servers** | SCP REST API | `netcup_scp_server`, `netcup_scp_server_action` | `netcup_scp_server`, `netcup_scp_servers`, `netcup_scp_server_metrics`, `netcup_scp_server_logs` |
 | **Networking & rDNS** | SCP REST API | `netcup_scp_rdns`, `netcup_scp_server_interface`, `netcup_scp_failover_ip_v4`, `netcup_scp_failover_ip_v6`, `netcup_scp_user_vlan` | `netcup_scp_rdns_ipv4`, `netcup_scp_rdns_ipv6`, `netcup_scp_server_interface`, `netcup_scp_server_interfaces`, `netcup_scp_user_failoverips_v4`, `netcup_scp_user_failoverips_v6`, `netcup_scp_user_vlan`, `netcup_scp_user_vlans`, `netcup_scp_vlan` |
