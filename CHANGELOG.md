@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.4.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.3.1...v1.4.0) (2026-10-18)
+
+
+### Features
+
+* **clouddns:** add dedicated DNS record support ([#34](https://github.com/rixlhq/terraform-provider-netcup/issues/34)) ([e0cc47d](https://github.com/rixlhq/terraform-provider-netcup/commit/e0cc47dfe9c13a6a5dde8371b1631c5f85b3fa7b))
+
+
+### Bug Fixes
+
+* **ci:** restore go-version-file in workflows and remove README note ([3b57544](https://github.com/rixlhq/terraform-provider-netcup/commit/3b5754409ad22d21214c5ac4adcf083e83f9ae3f))
+* **dns:** report missing legacy CCP credentials ([#31](https://github.com/rixlhq/terraform-provider-netcup/issues/31)) ([2a60a8f](https://github.com/rixlhq/terraform-provider-netcup/commit/2a60a8f438d4416b9c69b7e18aa8a4b01628b32e))
+* **scp:** align action paths and server state with the API ([cff5796](https://github.com/rixlhq/terraform-provider-netcup/commit/cff57962218fc6b9617140b3feb71d3e1c7a57f0))
+* **scp:** align implementation with the API contract ([#32](https://github.com/rixlhq/terraform-provider-netcup/issues/32)) ([e432556](https://github.com/rixlhq/terraform-provider-netcup/commit/e4325567a3ace9ede394370b95f838d644552106))
+* **scp:** await nested firewall update tasks ([e478a2a](https://github.com/rixlhq/terraform-provider-netcup/commit/e478a2a601b4a5977cbdb8c5a72970de86d79c2a))
+* **scp:** escape path parameters and preserve snapshot import names ([de6a355](https://github.com/rixlhq/terraform-provider-netcup/commit/de6a35558e6592e3675aebefb795f371eeadbc55))
+* **scp:** prevent duplicate actions, coordinate token refresh, and validate accepted tasks ([9edf332](https://github.com/rixlhq/terraform-provider-netcup/commit/9edf332fd57680738fec9ae1b013d9c0113cd1bf))
+* **scp:** retain data source inputs and forward server sorting ([e9ca010](https://github.com/rixlhq/terraform-provider-netcup/commit/e9ca01096dad865bfd7e8c1d10a1cf52b0b70057))
+
 ## [1.3.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v1.3.0...v1.3.1) (2026-10-18)
 
 
