@@ -3,12 +3,12 @@
 page_title: "netcup_scp_server_snapshot Resource - netcup"
 subcategory: ""
 description: |-
-  Manages snapshots of a netcup SCP virtual server.
+  Manages snapshots of a netcup SCP virtual server. Offline snapshots (online_snapshot = false) require disk_name and restart the server during creation. Online snapshots (online_snapshot = true) capture the running server without a disk selector.
 ---
 
 # netcup_scp_server_snapshot (Resource)
 
-Manages snapshots of a netcup SCP virtual server.
+Manages snapshots of a netcup SCP virtual server. Offline snapshots (online_snapshot = false) require disk_name and restart the server during creation. Online snapshots (online_snapshot = true) capture the running server without a disk selector.
 
 ## Example Usage
 
@@ -33,8 +33,8 @@ resource "netcup_scp_server_snapshot" "example" {
 ### Optional
 
 - `description` (String) Description of the snapshot.
-- `disk_name` (String) Name of the disk to snapshot. If omitted the whole server is snapshotted.
-- `online_snapshot` (Boolean) Whether the snapshot should be created while the server is running.
+- `disk_name` (String) Name of the disk to snapshot (e.g. "vda"). Required for offline snapshots (online_snapshot = false). Must not be set for online snapshots.
+- `online_snapshot` (Boolean) Whether the snapshot should be created while the server is running (default false). When false (offline snapshot), the server will restart and disk_name must be specified.
 
 ### Read-Only
 

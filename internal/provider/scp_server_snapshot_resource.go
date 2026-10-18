@@ -1,6 +1,10 @@
 package provider
 
 import (
+	"context"
+	"errors"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -8,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
 var scpServerSnapshotDownloadInfosAttributes = map[string]schema.Attribute{
@@ -31,7 +36,7 @@ var scpServerSnapshotDownloadInfosAttributes = map[string]schema.Attribute{
 }
 
 var scpServerSnapshotSchema = schema.Schema{
-	Description: "Manages snapshots of a netcup SCP virtual server.",
+	Description: "Manages snapshots of a netcup SCP virtual server. Offline snapshots (online_snapshot = false) require disk_name and restart the server during creation. Online snapshots (online_snapshot = true) capture the running server without a disk selector.",
 	Attributes: map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			Computed:    true,
@@ -62,7 +67,7 @@ var scpServerSnapshotSchema = schema.Schema{
 		"disk_name": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "Name of the disk to snapshot. If omitted the whole server is snapshotted.",
+			Description: "Name of the disk to snapshot (e.g. \"vda\"). Required for offline snapshots (online_snapshot = false). Must not be set for online snapshots.",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
@@ -70,7 +75,7 @@ var scpServerSnapshotSchema = schema.Schema{
 		"online_snapshot": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "Whether the snapshot should be created while the server is running.",
+			Description: "Whether the snapshot should be created while the server is running (default false). When false (offline snapshot), the server will restart and disk_name must be specified.",
 			PlanModifiers: []planmodifier.Bool{
 				boolplanmodifier.RequiresReplace(),
 			},
@@ -112,6 +117,42 @@ var scpServerSnapshotSchema = schema.Schema{
 	},
 }
 
+func validateScpServerSnapshot(_ context.Context, v tftypes.Value) error {
+	var obj map[string]tftypes.Value
+	if err := v.As(&obj); err != nil {
+		return nil
+	}
+
+	onlineVal, hasOnline := obj["online_snapshot"]
+	diskVal, hasDiskVal := obj["disk_name"]
+
+	if (hasOnline && !onlineVal.IsKnown()) || (hasDiskVal && !diskVal.IsKnown()) {
+		return nil
+	}
+
+	isOnline := false
+	if hasOnline && !onlineVal.IsNull() {
+		var b bool
+		if err := onlineVal.As(&b); err == nil {
+			isOnline = b
+		}
+	}
+
+	hasDisk := false
+	if hasDiskVal && !diskVal.IsNull() {
+		var s string
+		if err := diskVal.As(&s); err == nil && strings.TrimSpace(s) != "" {
+			hasDisk = true
+		}
+	}
+
+	if !isOnline && !hasDisk {
+		return errors.New("disk_name is required when creating an offline snapshot (online_snapshot = false); Netcup requires selecting a specific disk to snapshot offline and will restart the server")
+	}
+
+	return nil
+}
+
 var scpServerSnapshotSpec = scpCrudResourceSpec{
 	typeName:        "scp_server_snapshot",
 	createPath:      "/api/v1/servers/{server_id}/snapshots",
@@ -125,6 +166,7 @@ var scpServerSnapshotSpec = scpCrudResourceSpec{
 	idFromAttr:      "name",
 	importIDAttrs:   []string{attrServerID, "name"},
 	createReadsBack: true,
+	validate:        validateScpServerSnapshot,
 }
 
 // NewScpServerSnapshotResource returns a resource that manages snapshots of an

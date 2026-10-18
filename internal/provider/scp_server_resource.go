@@ -42,6 +42,8 @@ type ScpServerResourceModel struct {
 	OsOptimization     types.String `tfsdk:"os_optimization"`
 	KeyboardLayout     types.String `tfsdk:"keyboard_layout"`
 	CpuTopology        types.Object `tfsdk:"cpu_topology"`
+	BackupTime         types.String `tfsdk:"backup_time"`
+	State              types.String `tfsdk:"state"`
 	Name               types.String `tfsdk:"name"`
 	Disabled           types.Bool   `tfsdk:"disabled"`
 	RescueSystemActive types.Bool   `tfsdk:"rescue_system_active"`
@@ -198,7 +200,7 @@ func flattenServerJSON(serverID int64, v any) (map[string]any, error) {
 		}
 		sockets, hasSockets := live["sockets"]
 		cores, hasCores := live["coresPerSocket"]
-		if _, exists := flat["cpu_topology"]; !exists && hasSockets && hasCores && sockets != nil && cores != nil {
+		if hasSockets && hasCores {
 			flat["cpu_topology"] = map[string]any{
 				"socket_count":           sockets,
 				"cores_per_socket_count": cores,

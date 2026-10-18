@@ -70,6 +70,16 @@ var scpServerResourceSchema = schema.Schema{
 			},
 			Description: "CPU topology configuration.",
 		},
+		"backup_time": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Daily backup start time as local time with UTC offset (HH:mm:ss+HH:mm, e.g. 01:30:00+02:00). Negative offsets are not supported.",
+		},
+		"state": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Power state of the server (ON, OFF, SUSPENDED).",
+		},
 		"name": schema.StringAttribute{
 			Computed:    true,
 			Description: "Server name as returned by the SCP API.",

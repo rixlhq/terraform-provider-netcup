@@ -19,6 +19,8 @@ func buildServerPatches(plan, state ScpServerResourceModel) [][]byte {
 	patches = appendStringPatch(patches, plan.OsOptimization, state.OsOptimization, "os_optimization")
 	patches = appendStringPatch(patches, plan.KeyboardLayout, state.KeyboardLayout, "keyboardLayout")
 	patches = appendCpuTopologyPatch(patches, plan.CpuTopology, state.CpuTopology)
+	patches = appendStringPatch(patches, plan.BackupTime, state.BackupTime, "backupTime")
+	patches = appendStringPatch(patches, plan.State, state.State, "state")
 
 	return patches
 }

@@ -26,7 +26,7 @@ provider "netcup" {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: scpServerConfig(providerConfig, "server1", "server-one", "HDD"),
+				Config: scpServerConfig(providerConfig, "server1", "server-one", "HDD", "02:00:00+02:00", "ON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "server_id", "12345"),
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "hostname", "server1"),
@@ -36,21 +36,25 @@ provider "netcup" {
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "bootorder.0", "HDD"),
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "name", "test-server"),
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "cpu_topology.socket_count", "1"),
+					resource.TestCheckResourceAttr("netcup_scp_server.test", "backup_time", "02:00:00+02:00"),
+					resource.TestCheckResourceAttr("netcup_scp_server.test", "state", "ON"),
 				),
 			},
 			{
-				Config: scpServerConfig(providerConfig, "server2", "server-two", "CDROM"),
+				Config: scpServerConfig(providerConfig, "server2", "server-two", "CDROM", "03:00:00+02:00", "OFF"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "hostname", "server2"),
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "nickname", "server-two"),
 					resource.TestCheckResourceAttr("netcup_scp_server.test", "bootorder.0", "CDROM"),
+					resource.TestCheckResourceAttr("netcup_scp_server.test", "backup_time", "03:00:00+02:00"),
+					resource.TestCheckResourceAttr("netcup_scp_server.test", "state", "OFF"),
 				),
 			},
 		},
 	})
 }
 
-func scpServerConfig(providerConfig, hostname, nickname, firstBoot string) string {
+func scpServerConfig(providerConfig, hostname, nickname, firstBoot, backupTime, state string) string {
 	return providerConfig + fmt.Sprintf(`
 resource "netcup_scp_server" "test" {
   server_id        = 12345
@@ -61,12 +65,14 @@ resource "netcup_scp_server" "test" {
   bootorder        = [%q, "NETWORK"]
   os_optimization  = "LINUX"
   keyboard_layout  = "de"
+  backup_time      = %q
+  state            = %q
   cpu_topology = {
     socket_count           = 1
     cores_per_socket_count = 2
   }
 }
-`, hostname, nickname, firstBoot)
+`, hostname, nickname, firstBoot, backupTime, state)
 }
 
 type scpServerMock struct {
@@ -80,6 +86,8 @@ type scpServerMock struct {
 	keyboard     string
 	socketCount  int64
 	coresPerSock int64
+	backupTime   string
+	state        string
 }
 
 func (m *scpServerMock) applyPatch(payload map[string]any) {
@@ -106,6 +114,12 @@ func (m *scpServerMock) applyPatch(payload map[string]any) {
 	}
 	if v, ok := payload["keyboardLayout"].(string); ok {
 		m.keyboard = v
+	}
+	if v, ok := payload["backupTime"].(string); ok {
+		m.backupTime = v
+	}
+	if v, ok := payload["state"].(string); ok {
+		m.state = v
 	}
 	if v, ok := payload["cpuTopology"].(map[string]any); ok {
 		if n, ok := v["socketCount"].(json.Number); ok {
@@ -144,15 +158,20 @@ func (m *scpServerMock) handleGet(w http.ResponseWriter, r *http.Request) {
 
 	m.mu.Lock()
 	resp := map[string]any{
-		"name":               "test-server",
-		"hostname":           m.hostname,
-		"nickname":           m.nickname,
-		"autostart":          m.autostart,
-		"uefi":               m.uefi,
-		"bootorder":          m.bootOrder,
-		"osOptimization":     m.osOpt,
-		"keyboardLayout":     m.keyboard,
-		"serverLiveInfo":     map[string]any{"sockets": m.socketCount, "coresPerSocket": m.coresPerSock},
+		"name":           "test-server",
+		"hostname":       m.hostname,
+		"nickname":       m.nickname,
+		"autostart":      m.autostart,
+		"uefi":           m.uefi,
+		"bootorder":      m.bootOrder,
+		"osOptimization": m.osOpt,
+		"keyboardLayout": m.keyboard,
+		"serverLiveInfo": map[string]any{
+			"sockets":        m.socketCount,
+			"coresPerSocket": m.coresPerSock,
+			"backupTime":     m.backupTime,
+			"state":          m.state,
+		},
 		"disabled":           false,
 		"rescueSystemActive": false,
 		"snapshotAllowed":    true,
@@ -178,14 +197,20 @@ func newScpServerMockServer(t *testing.T) *httptest.Server {
 		keyboard:     "de",
 		socketCount:  1,
 		coresPerSock: 2,
+		backupTime:   "02:00:00+02:00",
+		state:        "ON",
 	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/scp-core/api/v1/servers/12345", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPatch {
+		switch r.Method {
+		case http.MethodGet:
+			mock.handleGet(w, r)
+		case http.MethodPatch:
 			mock.handlePatch(w, r)
-			return
+		default:
+			http.Error(w, "not allowed", http.StatusMethodNotAllowed)
 		}
-		mock.handleGet(w, r)
 	})
 
 	return httptest.NewServer(mux)

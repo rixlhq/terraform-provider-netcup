@@ -2,10 +2,11 @@ package scpmaintenance
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/rixlhq/terraform-provider-netcup/internal/providerdata"
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
 )
@@ -28,6 +29,7 @@ func (d *ScpMaintenanceDataSource) Metadata(ctx context.Context, req datasource.
 
 func (d *ScpMaintenanceDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = ScpMaintenanceDataSourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Netcup is removing the underlying SCP endpoint GET /api/v1/maintenance by 31.12.2026. This data source will be removed in a future major version."
 }
 
 func (d *ScpMaintenanceDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -44,12 +46,17 @@ func (d *ScpMaintenanceDataSource) Configure(ctx context.Context, req datasource
 		return
 	}
 
+	if pd.SCP == nil {
+		return
+	}
+
 	d.client = pd.SCP
 }
 
 func (d *ScpMaintenanceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ScpMaintenanceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	var state ScpMaintenanceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -58,31 +65,24 @@ func (d *ScpMaintenanceDataSource) Read(ctx context.Context, req datasource.Read
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := "/api/v1/maintenance"
 
-	body, err := d.client.Get(ctx, path, nil)
+	body, err := d.client.Get(ctx, "/api/v1/maintenance", nil)
 	if err != nil {
 		resp.Diagnostics.AddError("SCP API Error", err.Error())
 		return
 	}
 
-	jsonVal, err := scpcommon.DecodeJSONResponse(body)
-	if err != nil {
+	var apiResp struct {
+		FinishAt string `json:"finishAt"`
+		StartAt  string `json:"startAt"`
+	}
+	if err := json.Unmarshal(body, &apiResp); err != nil {
 		resp.Diagnostics.AddError("JSON Decode Error", err.Error())
 		return
 	}
 
-	if arr, ok := jsonVal.([]any); ok {
-		jsonVal = map[string]any{"scp_maintenance": arr}
-	}
+	state.FinishAt = types.StringValue(apiResp.FinishAt)
+	state.StartAt = types.StringValue(apiResp.StartAt)
 
-	schema := ScpMaintenanceDataSourceSchema(ctx)
-	tfType := schema.Type().TerraformType(ctx)
-	tfVal, err := scpcommon.JSONToTfValue(ctx, tfType, jsonVal)
-	if err != nil {
-		resp.Diagnostics.AddError("State Conversion Error", err.Error())
-		return
-	}
-
-	scpcommon.SetDataSourceState(req.Config, tfVal, resp)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }

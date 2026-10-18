@@ -53,9 +53,15 @@ type scpCrudResourceSpec struct {
 	// that make up the import ID. The ID is expected as a slash-separated string
 	// (e.g. "12345/67890"). If empty, the resource does not support import.
 	importIDAttrs []string
+	// validate optionally validates config/plan values before execution.
+	validate func(ctx context.Context, v tftypes.Value) error
 }
 
-var _ resource.ResourceWithImportState = &scpCrudResource{}
+var (
+	_ resource.Resource                   = &scpCrudResource{}
+	_ resource.ResourceWithImportState    = &scpCrudResource{}
+	_ resource.ResourceWithValidateConfig = &scpCrudResource{}
+)
 
 // scpCrudResource is a generic Terraform resource backed by one SCP REST
 // entity. It operates directly on tftypes.Value so it can reuse a generated

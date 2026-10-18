@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/rixlhq/terraform-provider-netcup/internal/scpclient"
@@ -94,4 +95,57 @@ func sendRequest(t *testing.T, c *scpclient.Client, method string, body []byte) 
 		t.Fatalf("unhandled method %q", method)
 	}
 	return err
+}
+
+var apiErrorTests = []struct {
+	name       string
+	err        scpclient.APIError
+	wantSubstr []string
+}{
+	{
+		name:       "empty body",
+		err:        scpclient.APIError{StatusCode: 500, Body: ""},
+		wantSubstr: []string{"scp API error 500"},
+	},
+	{
+		name:       "plain text body",
+		err:        scpclient.APIError{StatusCode: 502, Body: "Bad Gateway"},
+		wantSubstr: []string{"scp API error 502: Bad Gateway"},
+	},
+	{
+		name: "validation error with field errors",
+		err: scpclient.APIError{
+			StatusCode: 400,
+			Body:       `{"code":"server.snapshot.create.error.disk","message":"Validation failed","errors":[{"field":"diskName","message":"disk is required for offline snapshot"}]}`,
+		},
+		wantSubstr: []string{
+			"scp API error 400",
+			"Validation failed",
+			"diskName: disk is required for offline snapshot",
+		},
+	},
+	{
+		name: "response error with message only",
+		err: scpclient.APIError{
+			StatusCode: 404,
+			Body:       `{"code":"server.not.found","message":"Server not found."}`,
+		},
+		wantSubstr: []string{"scp API error 404", "Server not found."},
+	},
+}
+
+func TestAPIError_Error(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range apiErrorTests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := tc.err.Error()
+			for _, sub := range tc.wantSubstr {
+				if !strings.Contains(got, sub) {
+					t.Errorf("Error() = %q, want it to contain %q", got, sub)
+				}
+			}
+		})
+	}
 }

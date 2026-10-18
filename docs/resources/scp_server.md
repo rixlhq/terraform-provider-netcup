@@ -44,12 +44,14 @@ resource "netcup_scp_server" "example" {
 ### Optional
 
 - `autostart` (Boolean) Whether the server should start automatically.
+- `backup_time` (String) Daily backup start time as local time with UTC offset (HH:mm:ss+HH:mm, e.g. 01:30:00+02:00). Negative offsets are not supported.
 - `bootorder` (List of String) Boot order as a list of values such as HDD, CDROM, NETWORK.
 - `cpu_topology` (Attributes) CPU topology configuration. (see [below for nested schema](#nestedatt--cpu_topology))
 - `hostname` (String) Server hostname.
 - `keyboard_layout` (String) Keyboard layout used by the virtual console.
 - `nickname` (String) User-defined nickname for the server.
 - `os_optimization` (String) OS optimization (LINUX, WINDOWS, BSD, LINUX_LEGACY, UNKNOWN).
+- `state` (String) Power state of the server (ON, OFF, SUSPENDED).
 - `uefi` (Boolean) Whether UEFI is enabled.
 
 ### Read-Only

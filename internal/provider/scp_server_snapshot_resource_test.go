@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -55,6 +56,34 @@ resource "netcup_scp_server_snapshot" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("netcup_scp_server_snapshot.test", "description", "second"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccScpServerSnapshot_offlineValidation(t *testing.T) {
+	server := newSnapshotMockServer(t)
+	defer server.Close()
+
+	providerConfig := fmt.Sprintf(`
+provider "netcup" {
+  scp_access_token = "mock-token"
+  scp_base_url     = "%s/scp-core"
+}
+`, server.URL)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: providerConfig + `
+resource "netcup_scp_server_snapshot" "fail" {
+  server_id       = 12345
+  name            = "test-offline"
+  online_snapshot = false
+}
+`,
+				ExpectError: regexp.MustCompile(`disk_name is required when creating an offline snapshot`),
 			},
 		},
 	})
@@ -138,13 +167,16 @@ func newSnapshotMockServer(t *testing.T) *httptest.Server {
 		State:          "AVAILABLE",
 		Online:         true,
 		Exported:       false,
-		ExportedSize:   0,
-		DownloadInfos:  nil,
+		ExportedSize:   1024,
 	}}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/scp-core/api/v1/servers/12345/snapshots", mock.handleCreate)
 	mux.HandleFunc("/scp-core/api/v1/servers/12345/snapshots/test-snap", mock.handleReadOrDelete)
+	mux.HandleFunc("/scp-core/api/v1/tasks/task-snapshot-1", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(snapshotTaskResponse{UUID: "task-snapshot-1", State: taskStateFinished})
+	})
 
 	return httptest.NewServer(mux)
 }

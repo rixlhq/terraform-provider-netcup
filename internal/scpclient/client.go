@@ -3,6 +3,7 @@ package scpclient
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -20,6 +21,43 @@ type APIError struct {
 }
 
 func (e *APIError) Error() string {
+	if len(e.Body) == 0 {
+		return fmt.Sprintf("scp API error %d", e.StatusCode)
+	}
+
+	var parsed struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+		Errors  []struct {
+			Field   string `json:"field"`
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	if err := json.Unmarshal([]byte(e.Body), &parsed); err == nil {
+		var details []string
+		if parsed.Message != "" {
+			details = append(details, parsed.Message)
+		}
+		for _, fe := range parsed.Errors {
+			switch {
+			case fe.Field != "" && fe.Message != "":
+				details = append(details, fmt.Sprintf("%s: %s", fe.Field, fe.Message))
+			case fe.Message != "":
+				details = append(details, fe.Message)
+			case fe.Field != "":
+				details = append(details, fe.Field)
+			}
+		}
+		if len(details) > 0 {
+			msg := strings.Join(details, "; ")
+			if parsed.Code != "" && !strings.Contains(msg, parsed.Code) {
+				return fmt.Sprintf("scp API error %d (%s): %s", e.StatusCode, parsed.Code, msg)
+			}
+			return fmt.Sprintf("scp API error %d: %s", e.StatusCode, msg)
+		}
+	}
+
 	return fmt.Sprintf("scp API error %d: %s", e.StatusCode, e.Body)
 }
 

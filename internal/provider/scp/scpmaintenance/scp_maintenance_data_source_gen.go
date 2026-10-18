@@ -11,6 +11,7 @@ import (
 
 func ScpMaintenanceDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
+		DeprecationMessage:  "Netcup is removing the underlying SCP endpoint GET /api/v1/maintenance by 31.12.2026. This data source will be removed in a future major version.",
 		MarkdownDescription: "Get maintenance information for system. This endpoint has been deprecated and will be removed by 31.12.2026.",
 		Attributes: map[string]schema.Attribute{
 			"finish_at": schema.StringAttribute{

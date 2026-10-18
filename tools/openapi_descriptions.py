@@ -72,25 +72,35 @@ def get_summary(spec: dict, path: str, method: str) -> str:
     return " ".join(text.split())
 
 
+def is_deprecated(spec: dict, path: str, method: str) -> bool:
+    op = spec["paths"][path][method]
+    return bool(op.get("deprecated"))
+
+
 def find_schema_file(pkg_dir: Path) -> Path | None:
     for f in pkg_dir.glob("*_data_source_gen.go"):
         return f
     return None
 
 
-def patch_schema_markdown_description(file_path: Path, description: str) -> bool:
+def patch_schema_markdown_description(file_path: Path, description: str, deprecated: bool = False) -> bool:
     content = file_path.read_text()
     desc_literal = go_string_literal(description)
 
     # Target the top-level schema.Schema opening, replacing any existing
-    # MarkdownDescription and preserving the indentation of the Attributes block.
+    # MarkdownDescription and DeprecationMessage, preserving indentation.
     pattern = re.compile(
-        r"(return schema\.Schema\{\n)(?:\s*MarkdownDescription:[^,\n]+,\n)?(\s*)Attributes:",
+        r"(return schema\.Schema\{\n)(?:\s*DeprecationMessage:[^,\n]+,\n)?(?:\s*MarkdownDescription:[^,\n]+,\n)?(\s*)Attributes:",
     )
     if not pattern.search(content):
         return False
 
-    replacement = f"\\1\\2MarkdownDescription: {desc_literal},\n\\2Attributes:"
+    dep_block = ""
+    if deprecated:
+        dep_msg = go_string_literal("Netcup is removing the underlying SCP endpoint GET /api/v1/maintenance by 31.12.2026. This data source will be removed in a future major version.")
+        dep_block = f"\\2DeprecationMessage: {dep_msg},\n"
+
+    replacement = f"\\1{dep_block}\\2MarkdownDescription: {desc_literal},\n\\2Attributes:"
     new_content, count = pattern.subn(replacement, content, count=1)
     if count == 0:
         return False
@@ -114,7 +124,8 @@ def main() -> None:
             print(f"warn: no generated schema for {pkg}")
             continue
 
-        if patch_schema_markdown_description(schema_file, summary):
+        deprecated = is_deprecated(spec, path, method)
+        if patch_schema_markdown_description(schema_file, summary, deprecated):
             print(f"updated {schema_file.relative_to(REPO_ROOT)}")
             updated += 1
 
