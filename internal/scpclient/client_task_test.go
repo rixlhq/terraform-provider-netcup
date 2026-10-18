@@ -60,3 +60,38 @@ func TestFirewallPolicyTaskPolling(t *testing.T) {
 		t.Fatalf("wrapped task was not awaited: polled=%v result=%s", polled, result)
 	}
 }
+
+func TestMalformedAcceptedTaskIsNotSuccess(t *testing.T) {
+	t.Parallel()
+	for _, body := range []string{`not-json`, `{}`, `null`, `{"taskInfo":null}`, `{"firewallPolicy":{"id":1}}`} {
+		t.Run(body, func(t *testing.T) {
+			t.Parallel()
+			c := scpclient.New("token", "", "https://scp.invalid", &http.Client{Transport: retryTransport(func(_ *http.Request) (*http.Response, error) { return retryResponse(http.StatusAccepted, body), nil })})
+			if _, err := c.Put(t.Context(), "/api/v1/users/123/firewall-policies/1", nil); err == nil {
+				t.Fatal("malformed accepted response reported success")
+			}
+		})
+	}
+}
+
+func TestAcceptedVLANWithoutTaskBody(t *testing.T) {
+	t.Parallel()
+	c := scpclient.New("token", "", "https://scp.invalid", &http.Client{Transport: retryTransport(func(_ *http.Request) (*http.Response, error) { return retryResponse(http.StatusAccepted, ""), nil })})
+	// The OpenAPI documents a bodyless 202 for VLAN updates.
+	if _, err := c.Put(t.Context(), "/api/v1/users/123/vlans/456", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCompletedAcceptedTaskWithoutUUID(t *testing.T) {
+	t.Parallel()
+	// TaskInfo.uuid is optional in the published schema. An explicitly finished
+	// task does not need polling, so its result remains usable without a UUID.
+	c := scpclient.New("token", "", "https://scp.invalid", &http.Client{Transport: retryTransport(func(_ *http.Request) (*http.Response, error) {
+		return retryResponse(http.StatusAccepted, `{"state":"FINISHED","result":{"id":1}}`), nil
+	})})
+	result, err := c.Put(t.Context(), "/api/v1/users/123/firewall-policies/1", nil)
+	if err != nil || string(result) != `{"id":1}` {
+		t.Fatalf("completed task result=%s, error=%v", result, err)
+	}
+}

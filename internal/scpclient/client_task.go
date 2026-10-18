@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -18,9 +19,14 @@ type taskInfo struct {
 }
 
 func (c *Client) waitForTask(ctx context.Context, body []byte) ([]byte, error) {
+	// VLAN updates document a bodyless 202; a nonempty body must identify
+	// a task rather than silently reporting an untracked operation as complete.
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil, nil
+	}
 	info, ok := parseTaskInfo(body)
 	if !ok {
-		return nil, nil
+		return nil, errors.New("SCP accepted response has no usable task information")
 	}
 
 	tflog.Debug(ctx, "polling SCP task", map[string]any{
@@ -77,7 +83,7 @@ func parseTaskInfo(body []byte) (taskInfo, bool) {
 	if response.Nested != nil {
 		info = *response.Nested
 	}
-	return info, info.UUID != ""
+	return info, info.UUID != "" || info.State == "FINISHED"
 }
 
 func (c *Client) pollTask(ctx context.Context, uuid string) (taskInfo, error) {

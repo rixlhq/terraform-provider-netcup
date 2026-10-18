@@ -3,7 +3,6 @@ package scpclient
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -48,12 +47,6 @@ type Client struct {
 	mu           sync.Mutex
 }
 
-type tokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
 // New creates an SCP API client.
 func New(accessToken, refreshToken, baseURL string, httpClient *http.Client) *Client {
 	if baseURL == "" {
@@ -95,10 +88,7 @@ func (c *Client) Delete(ctx context.Context, path string) ([]byte, error) {
 	return c.doWithRetry(ctx, http.MethodDelete, path, nil, nil)
 }
 
-func (c *Client) do(ctx context.Context, method, path string, query url.Values, body []byte) ([]byte, int, error) {
-	c.mu.Lock()
-	accessToken := c.accessToken
-	c.mu.Unlock()
+func (c *Client) do(ctx context.Context, method, path string, query url.Values, body []byte, accessToken string) ([]byte, int, error) {
 
 	u, err := url.Parse(c.baseURL + path)
 	if err != nil {
@@ -142,51 +132,4 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 	}
 
 	return respBody, resp.StatusCode, nil
-}
-
-func (c *Client) refresh(ctx context.Context) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.refreshToken == "" {
-		return errors.New("no refresh token available")
-	}
-
-	data := url.Values{}
-	data.Set("client_id", "scp")
-	data.Set("refresh_token", c.refreshToken)
-	data.Set("grant_type", "refresh_token")
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("token refresh returned %d: %s", resp.StatusCode, string(body))
-	}
-
-	var tr tokenResponse
-	if err := json.Unmarshal(body, &tr); err != nil {
-		return err
-	}
-
-	c.accessToken = tr.AccessToken
-	if tr.RefreshToken != "" {
-		c.refreshToken = tr.RefreshToken
-	}
-
-	return nil
 }
