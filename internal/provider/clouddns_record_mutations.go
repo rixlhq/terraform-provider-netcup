@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,7 +16,10 @@ func (r *cloudDNSRecordResource) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if err := r.change(ctx, &data, nil); err != nil {
+	if committed, err := r.change(ctx, &data, nil); err != nil {
+		if committed {
+			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		}
 		resp.Diagnostics.AddError("CloudDNS Create Error", err.Error())
 		return
 	}
@@ -29,7 +33,10 @@ func (r *cloudDNSRecordResource) Update(ctx context.Context, req resource.Update
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if err := r.change(ctx, &data, &old); err != nil {
+	if committed, err := r.change(ctx, &data, &old); err != nil {
+		if committed {
+			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		}
 		resp.Diagnostics.AddError("CloudDNS Update Error", err.Error())
 		return
 	}
@@ -63,25 +70,63 @@ func (r *cloudDNSRecordResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *cloudDNSRecordResource) change(ctx context.Context, data, old *cloudDNSRecordModel) error {
+func (r *cloudDNSRecordResource) change(ctx context.Context, data, old *cloudDNSRecordModel) (bool, error) {
+	if err := r.checkChange(ctx, *data, old); err != nil {
+		return false, err
+	}
 	var remove []clouddnsclient.RecordInput
 	if old != nil {
 		remove = []clouddnsclient.RecordInput{cloudDNSInput(*old)}
 	}
 	revision, err := r.client.ChangeRecords(ctx, data.DomainID.ValueInt64(), []clouddnsclient.RecordInput{cloudDNSInput(*data)}, remove)
 	if err != nil {
-		return err
+		return false, err
 	}
+	data.ID = types.StringValue(fmt.Sprintf("%d/pending", data.DomainID.ValueInt64()))
 	records, err := r.client.Records(ctx, data.DomainID.ValueInt64(), revision.Identifier)
 	if err != nil {
-		return err
+		return true, err
 	}
 	// An update creates a new record identifier; match the desired content instead of the old ID.
 	desired := *data
 	desired.ID = types.StringNull()
 	record := findCloudDNSRecord(desired, records)
 	if record == nil {
-		return errors.New("CloudDNS changeset succeeded but the requested record was not returned")
+		return true, errors.New("CloudDNS changeset succeeded but the requested record was not returned")
 	}
-	return updateCloudDNSModel(data, *record)
+	return true, updateCloudDNSModel(data, *record)
+}
+
+func (r *cloudDNSRecordResource) checkChange(ctx context.Context, data cloudDNSRecordModel, old *cloudDNSRecordModel) error {
+	records, err := activeCloudDNSRecords(ctx, r.client, data.DomainID.ValueInt64())
+	if err != nil {
+		return err
+	}
+	desired := data
+	desired.ID = types.StringNull()
+	existing := findCloudDNSRecord(desired, records)
+	if old == nil {
+		if existing != nil {
+			return errors.New("CloudDNS record already exists; import it before managing it")
+		}
+		return nil
+	}
+	previous := findCloudDNSRecord(*old, records)
+	if previous == nil || previous.TTL == nil {
+		return errors.New("CloudDNS record changed since planning; refresh the plan before updating")
+	}
+	if previous.Immutable {
+		return errors.New("immutable CloudDNS records cannot be updated")
+	}
+	current := *old
+	if err = updateCloudDNSModel(&current, *previous); err != nil {
+		return err
+	}
+	if cloudDNSInput(current) != cloudDNSInput(*old) {
+		return errors.New("CloudDNS record changed since planning; refresh the plan before updating")
+	}
+	if existing != nil && existing.Identifier != previous.Identifier {
+		return errors.New("CloudDNS record already exists; refusing to replace another record")
+	}
+	return nil
 }

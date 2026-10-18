@@ -9,6 +9,8 @@ import (
 	"testing"
 )
 
+const cloudDNSIdentifier = "identifier"
+
 type cloudDNSInput struct {
 	Name  string `json:"name"`
 	Type  string `json:"type"`
@@ -17,17 +19,20 @@ type cloudDNSInput struct {
 }
 
 type cloudDNSMock struct {
-	mu            sync.Mutex
-	t             *testing.T
-	records       []map[string]any
-	revisionState string
-	writes        int
+	mu                 sync.Mutex
+	t                  *testing.T
+	records            []map[string]any
+	revisionState      string
+	writes             int
+	failReadAfterWrite bool
+	failAfterWrites    int
+	readFailed         bool
 }
 
 func newCloudDNSMock(t *testing.T) *cloudDNSMock {
 	t.Helper()
-	return &cloudDNSMock{t: t, revisionState: "active", records: []map[string]any{
-		{"identifier": "unmanaged", "name": "@", "type": "NS", "rdata": "ns.example.", "ttl": nil, "immutable": true},
+	return &cloudDNSMock{t: t, revisionState: "active", failAfterWrites: 1, records: []map[string]any{
+		{cloudDNSIdentifier: "unmanaged", "name": "@", "type": "NS", "rdata": "ns.example.", "ttl": nil, "immutable": true},
 	}}
 }
 
@@ -45,10 +50,18 @@ func (m *cloudDNSMock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		result = []map[string]any{{"id": 42, "fqdn": "example.com", "isDnsManaged": true}}
 	case "GET /v1/domain/42/dns/revision":
 		result = []map[string]any{
-			{"identifier": "draft", "state": "draft", "serial": nil},
-			{"identifier": "revision", "state": m.revisionState, "serial": 2026101901},
+			{cloudDNSIdentifier: "draft", "state": "draft", "serial": nil},
+			{cloudDNSIdentifier: "revision", "state": m.revisionState, "serial": 2026101901},
 		}
 	case "GET /v1/domain/42/dns/revision/revision/record":
+		if m.failReadAfterWrite && m.writes >= m.failAfterWrites && !m.readFailed {
+			m.readFailed = true
+			w.WriteHeader(http.StatusServiceUnavailable)
+			if err := json.NewEncoder(w).Encode(map[string]any{"success": false, "errors": []any{map[string]string{"code": "temporarilyUnavailable", "message": "read failed"}}, "result": nil}); err != nil {
+				m.t.Error(err)
+			}
+			return
+		}
 		result = m.records
 	case "POST /v1/domain/42/changeset":
 		if r.Header.Get("Content-Type") != "application/json" {
@@ -99,10 +112,10 @@ func (m *cloudDNSMock) changeset(w http.ResponseWriter, r *http.Request) any {
 		m.records = slices.Delete(m.records, index, index+1)
 	}
 	for _, next := range body.Create {
-		m.records = append(m.records, map[string]any{"identifier": fmt.Sprintf("record-%d", m.writes), "name": next.Name, "type": next.Type, "rdata": next.RData, "ttl": next.TTL, "immutable": false})
+		m.records = append(m.records, map[string]any{cloudDNSIdentifier: fmt.Sprintf("record-%d", m.writes), "name": next.Name, "type": next.Type, "rdata": next.RData, "ttl": next.TTL, "immutable": false})
 	}
 	m.writes++
-	return map[string]any{"identifier": "revision", "state": "active", "serial": 2026101901}
+	return map[string]any{cloudDNSIdentifier: "revision", "state": "active", "serial": 2026101901}
 }
 
 func matchesCloudDNS(record map[string]any, input cloudDNSInput) bool {
@@ -119,7 +132,7 @@ func (m *cloudDNSMock) assertUnmanaged(t *testing.T) {
 	t.Helper()
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if len(m.records) != 1 || m.records[0]["identifier"] != "unmanaged" {
+	if len(m.records) != 1 || m.records[0][cloudDNSIdentifier] != "unmanaged" {
 		t.Fatalf("unmanaged record changed: %+v", m.records)
 	}
 }
