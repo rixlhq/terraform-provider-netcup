@@ -33,10 +33,6 @@ type providerData = providerdata.Data
 type NetcupProviderModel struct {
 	CloudDNSAPIKey  types.String `tfsdk:"clouddns_api_key"`
 	CloudDNSBaseURL types.String `tfsdk:"clouddns_base_url"`
-	APIKey          types.String `tfsdk:"api_key"`
-	APIPassword     types.String `tfsdk:"api_password"`
-	CustomerNumber  types.String `tfsdk:"customer_number"`
-	Endpoint        types.String `tfsdk:"endpoint"`
 	SCPAccessToken  types.String `tfsdk:"scp_access_token"`
 	SCPRefreshToken types.String `tfsdk:"scp_refresh_token"`
 	SCPBaseURL      types.String `tfsdk:"scp_base_url"`
@@ -49,28 +45,10 @@ func (p *NetcupProvider) Metadata(ctx context.Context, req provider.MetadataRequ
 
 func (p *NetcupProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Terraform provider for managing netcup infrastructure via the CCP DNS API (DomainWebservice JSON API), CloudDNS API, and SCP REST API (Server Control Panel OpenAPI). Supports CloudDNS and CCP DNS records, DNS zones, virtual servers, reverse DNS (rDNS IPv4/IPv6), network interfaces, firewall policies, snapshots, failover IPs, VLANs, custom images, ISOs, provider-defined functions, and ephemeral tokens under Terraform Plugin Framework protocol version 6.",
+		MarkdownDescription: "Terraform provider for managing netcup infrastructure via the CloudDNS REST API and SCP REST API (Server Control Panel OpenAPI). Supports CloudDNS records and domains, virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4/IPv6), network interfaces, firewall policies, snapshots, failover IPs, VLANs, custom images, ISOs, provider-defined functions, and ephemeral tokens under Terraform Plugin Framework protocol version 6.",
 		Attributes: map[string]schema.Attribute{
-			"clouddns_api_key":  schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "CloudDNS bearer API key from CCP Master Data > API > API Keys. Can be set via `NETCUP_CLOUDDNS_API_KEY`. Separate from legacy CCP and SCP credentials."},
+			"clouddns_api_key":  schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "CloudDNS bearer API key from CCP Master Data > API > API Keys. Can be set via `NETCUP_CLOUDDNS_API_KEY`."},
 			"clouddns_base_url": schema.StringAttribute{Optional: true, MarkdownDescription: "Override the CloudDNS API base URL (default https://api.netcup.com). Can be set via `NETCUP_CLOUDDNS_BASE_URL`."},
-			"api_key": schema.StringAttribute{
-				MarkdownDescription: "Netcup API key generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_KEY` environment variable.",
-				Optional:            true,
-				Sensitive:           true,
-			},
-			"api_password": schema.StringAttribute{
-				MarkdownDescription: "Netcup API password generated in the Customer Control Panel for the CCP/DNS API. Can be set via the `NETCUP_API_PASSWORD` environment variable.",
-				Optional:            true,
-				Sensitive:           true,
-			},
-			"customer_number": schema.StringAttribute{
-				MarkdownDescription: "Netcup customer number for the CCP/DNS API. Can be set via the `NETCUP_CUSTOMER_NUMBER` environment variable.",
-				Optional:            true,
-			},
-			"endpoint": schema.StringAttribute{
-				MarkdownDescription: "Override the netcup CCP JSON API endpoint. Can be set via the `NETCUP_ENDPOINT` environment variable.",
-				Optional:            true,
-			},
 			"scp_access_token": schema.StringAttribute{
 				MarkdownDescription: "Bearer access token for the netcup SCP REST API. Can be set via the `NETCUP_SCP_ACCESS_TOKEN` environment variable.",
 				Optional:            true,
@@ -98,12 +76,6 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	data = applyEnvOverrides(data)
 
-	ccpClient, hasCCP, err := newCCPClient(data)
-	if err != nil {
-		resp.Diagnostics.AddError("CCP Client Configuration Error", err.Error())
-		return
-	}
-
 	scpClient, hasSCP := newSCPClient(data)
 
 	cloudClient, hasCloud, err := newCloudDNSClient(data)
@@ -112,23 +84,21 @@ func (p *NetcupProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	if !hasCCP && !hasSCP && !hasCloud {
+	if !hasSCP && !hasCloud {
 		resp.Diagnostics.AddError(
 			"Missing Credentials",
-			"Configure CloudDNS credentials (clouddns_api_key), CCP credentials (api_key, api_password, customer_number), or SCP credentials (scp_access_token or scp_refresh_token).",
+			"Configure CloudDNS credentials (clouddns_api_key) or SCP credentials (scp_access_token or scp_refresh_token).",
 		)
 		return
 	}
 
-	resp.DataSourceData = &providerData{CCP: ccpClient, SCP: scpClient, CloudDNS: cloudClient}
-	resp.ResourceData = &providerData{CCP: ccpClient, SCP: scpClient, CloudDNS: cloudClient}
+	resp.DataSourceData = &providerData{SCP: scpClient, CloudDNS: cloudClient}
+	resp.ResourceData = &providerData{SCP: scpClient, CloudDNS: cloudClient}
 }
 
 func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudDNSRecordResource,
-		NewDNSRecordResource,
-		NewDNSZoneResource,
 		NewScpServerResource,
 		NewScpServerActionResource,
 		NewScpServerSnapshotResource,
@@ -146,12 +116,10 @@ func (p *NetcupProvider) Resources(ctx context.Context) []func() resource.Resour
 }
 
 func (p *NetcupProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	sources := make([]func() datasource.DataSource, 0, 5+len(scp.DataSources()))
+	sources := make([]func() datasource.DataSource, 0, 3+len(scp.DataSources()))
 	sources = append(sources,
 		NewCloudDNSDomainsDataSource,
 		NewCloudDNSRecordsDataSource,
-		NewDNSRecordsDataSource,
-		NewDNSZoneDataSource,
 		NewScpServerMetricsDataSource,
 	)
 	sources = append(sources, scp.DataSources()...)

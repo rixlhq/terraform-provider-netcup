@@ -44,6 +44,7 @@ data "netcup_clouddns_records" "all" {
 				resource.TestCheckResourceAttr("data.netcup_clouddns_records.all", "records.#", "2"),
 			)},
 			{ResourceName: "netcup_clouddns_record.test", ImportState: true, ImportStateVerify: true},
+			{ResourceName: "netcup_clouddns_record.test", ImportState: true, ImportStateId: "42/www/A/192.0.2.1", ImportStateVerify: true},
 			{Config: config("192.0.2.2"), Check: resource.TestCheckResourceAttr("netcup_clouddns_record.test", "rdata", "192.0.2.2")},
 			{Config: config("192.0.2.2"), PlanOnly: true},
 			{Config: config("192.0.2.2"), PreConfig: mock.removeManaged, ExpectNonEmptyPlan: true, PlanOnly: true},

@@ -38,10 +38,6 @@ func TestProviderCredentials(t *testing.T) {
 			raw := tftypes.NewValue(schemaResponse.Schema.Type().TerraformType(ctx), map[string]tftypes.Value{
 				"clouddns_api_key":  stringValue(test.cloudKey),
 				"clouddns_base_url": stringValue(nil),
-				"api_key":           stringValue(nil),
-				"api_password":      stringValue(nil),
-				"customer_number":   stringValue(nil),
-				"endpoint":          stringValue(nil),
 				"scp_access_token":  stringValue(test.accessToken),
 				"scp_refresh_token": stringValue(test.refreshToken),
 				"scp_base_url":      stringValue(nil),

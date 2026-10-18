@@ -8,19 +8,15 @@ import (
 )
 
 func TestApplyEnvOverrides(t *testing.T) {
-	t.Setenv("NETCUP_API_KEY", "env-api-key")
-	t.Setenv("NETCUP_API_PASSWORD", "env-api-password")
-	t.Setenv("NETCUP_CUSTOMER_NUMBER", "env-customer")
-	t.Setenv("NETCUP_ENDPOINT", "env-endpoint")
+	t.Setenv("NETCUP_CLOUDDNS_API_KEY", "env-cloud-key")
+	t.Setenv("NETCUP_CLOUDDNS_BASE_URL", "env-cloud-url")
 	t.Setenv("NETCUP_SCP_ACCESS_TOKEN", "env-access-token")
 	t.Setenv("NETCUP_SCP_REFRESH_TOKEN", "env-refresh-token")
 	t.Setenv("NETCUP_SCP_BASE_URL", "env-base-url")
 
 	data := NetcupProviderModel{
-		APIKey:          types.StringValue("config-api-key"),
-		APIPassword:     types.StringNull(),
-		CustomerNumber:  types.StringNull(),
-		Endpoint:        types.StringValue("config-endpoint"),
+		CloudDNSAPIKey:  types.StringValue("config-cloud-key"),
+		CloudDNSBaseURL: types.StringNull(),
 		SCPAccessToken:  types.StringNull(),
 		SCPRefreshToken: types.StringValue("config-refresh-token"),
 		SCPBaseURL:      types.StringNull(),
@@ -28,17 +24,11 @@ func TestApplyEnvOverrides(t *testing.T) {
 
 	got := applyEnvOverrides(data)
 
-	if got.APIKey.ValueString() != "config-api-key" {
-		t.Errorf("api_key: expected config value to be retained, got %q", got.APIKey.ValueString())
+	if got.CloudDNSAPIKey.ValueString() != "config-cloud-key" {
+		t.Errorf("clouddns_api_key: expected config value to be retained, got %q", got.CloudDNSAPIKey.ValueString())
 	}
-	if got.APIPassword.ValueString() != "env-api-password" {
-		t.Errorf("api_password: expected env value, got %q", got.APIPassword.ValueString())
-	}
-	if got.CustomerNumber.ValueString() != "env-customer" {
-		t.Errorf("customer_number: expected env value, got %q", got.CustomerNumber.ValueString())
-	}
-	if got.Endpoint.ValueString() != "config-endpoint" {
-		t.Errorf("endpoint: expected config value to be retained, got %q", got.Endpoint.ValueString())
+	if got.CloudDNSBaseURL.ValueString() != "env-cloud-url" {
+		t.Errorf("clouddns_base_url: expected env value, got %q", got.CloudDNSBaseURL.ValueString())
 	}
 	if got.SCPAccessToken.ValueString() != "env-access-token" {
 		t.Errorf("scp_access_token: expected env value, got %q", got.SCPAccessToken.ValueString())
@@ -53,42 +43,38 @@ func TestApplyEnvOverrides(t *testing.T) {
 
 func TestApplyEnvOverrides_noEnv(t *testing.T) {
 	data := NetcupProviderModel{
-		APIKey: types.StringValue("config-api-key"),
+		CloudDNSAPIKey: types.StringValue("config-cloud-key"),
 	}
 
 	got := applyEnvOverrides(data)
 
-	if got.APIKey.ValueString() != "config-api-key" {
-		t.Errorf("api_key: expected config value to be retained, got %q", got.APIKey.ValueString())
+	if got.CloudDNSAPIKey.ValueString() != "config-cloud-key" {
+		t.Errorf("clouddns_api_key: expected config value to be retained, got %q", got.CloudDNSAPIKey.ValueString())
 	}
 }
 
 func TestNewClients_rejectsEmptyStrings(t *testing.T) {
 	empty := NetcupProviderModel{
-		APIKey:          types.StringValue(""),
-		APIPassword:     types.StringValue(""),
-		CustomerNumber:  types.StringValue(""),
+		CloudDNSAPIKey:  types.StringValue(""),
 		SCPAccessToken:  types.StringValue(""),
 		SCPRefreshToken: types.StringValue(""),
 	}
 
-	if _, hasCCP, _ := newCCPClient(empty); hasCCP {
-		t.Errorf("newCCPClient: empty strings must not count as configured")
+	if _, hasCloud, _ := newCloudDNSClient(empty); hasCloud {
+		t.Errorf("newCloudDNSClient: empty strings must not count as configured")
 	}
 	if _, hasSCP := newSCPClient(empty); hasSCP {
 		t.Errorf("newSCPClient: empty strings must not count as configured")
 	}
 
-	partial := NetcupProviderModel{
-		APIKey:          types.StringValue("key"),
-		APIPassword:     types.StringValue(""),
-		CustomerNumber:  types.StringValue("customer"),
+	configured := NetcupProviderModel{
+		CloudDNSAPIKey:  types.StringValue("cloud-key"),
 		SCPRefreshToken: types.StringValue("refresh"),
 	}
-	if _, hasCCP, _ := newCCPClient(partial); hasCCP {
-		t.Errorf("newCCPClient: partial empty credentials must not count as configured")
+	if _, hasCloud, _ := newCloudDNSClient(configured); !hasCloud {
+		t.Errorf("newCloudDNSClient: non-empty cloud key must count as configured")
 	}
-	if _, hasSCP := newSCPClient(partial); !hasSCP {
+	if _, hasSCP := newSCPClient(configured); !hasSCP {
 		t.Errorf("newSCPClient: non-empty refresh token must count as configured")
 	}
 }

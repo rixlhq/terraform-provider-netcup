@@ -37,17 +37,42 @@ func (r *cloudDNSRecordResource) Read(ctx context.Context, req resource.ReadRequ
 
 func (r *cloudDNSRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, "/")
-	if len(parts) != 2 || parts[1] == "" {
-		resp.Diagnostics.AddError("Invalid Import ID", "Expected domain_id/record_identifier.")
+	if len(parts) == 2 && parts[1] != "" {
+		domainID, err := strconv.ParseInt(parts[0], 10, 64)
+		if err != nil || domainID < 1 {
+			resp.Diagnostics.AddError("Invalid Import ID", "domain_id must be a positive integer.")
+			return
+		}
+		data := cloudDNSRecordModel{ID: types.StringValue(req.ID), DomainID: types.Int64Value(domainID)}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 		return
 	}
-	domainID, err := strconv.ParseInt(parts[0], 10, 64)
-	if err != nil || domainID < 1 {
-		resp.Diagnostics.AddError("Invalid Import ID", "domain_id must be a positive integer.")
+
+	// Support composite format: domain_id/name/type/rdata
+	if len(parts) >= 4 {
+		domainID, err := strconv.ParseInt(parts[0], 10, 64)
+		if err != nil || domainID < 1 {
+			resp.Diagnostics.AddError("Invalid Import ID", "domain_id must be a positive integer.")
+			return
+		}
+		name := parts[1]
+		recType := strings.ToUpper(parts[2])
+		rdata := strings.Join(parts[3:], "/")
+		data := cloudDNSRecordModel{
+			ID:       types.StringValue(req.ID),
+			DomainID: types.Int64Value(domainID),
+			Name:     types.StringValue(name),
+			Type:     types.StringValue(recType),
+			RData:    types.StringValue(rdata),
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 		return
 	}
-	data := cloudDNSRecordModel{ID: types.StringValue(req.ID), DomainID: types.Int64Value(domainID)}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	resp.Diagnostics.AddError(
+		"Invalid Import ID",
+		"Expected either domain_id/record_identifier (e.g. '12345/rec-uuid') or domain_id/name/type/rdata (e.g. '12345/www/A/192.0.2.1').",
+	)
 }
 
 func findCloudDNSRecord(data cloudDNSRecordModel, records []clouddnsclient.Record) *clouddnsclient.Record {
