@@ -7,14 +7,14 @@
 
 A [Terraform](https://www.terraform.io) provider for managing infrastructure at [netcup](https://www.netcup.com) via official netcup REST APIs:
 
-- **CloudDNS REST API** (Bearer API) — modern replacement for the legacy Customer Control Panel (CCP) DomainWebservice DNS API; manage DNS records and query domain metadata with atomic changesets.
-- **Server Control Panel (SCP) REST API** (OpenAPI / OAuth 2.0) — manage virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4 & IPv6), network interfaces, VLANs, failover IPs, firewall policies, snapshots, custom disk images, and ISOs.
+- **[CloudDNS REST API](https://www.netcup.com/en/helpcenter/documentation/domain/cloud-dns)** (Bearer API) — modern replacement for the legacy Customer Control Panel (CCP) DomainWebservice DNS API; manage DNS records and query domain metadata with atomic changesets.
+- **[Server Control Panel (SCP) REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api)** (OpenAPI / OAuth 2.0) — manage virtual servers (VPS / Root Server), reverse DNS (rDNS IPv4 & IPv6), network interfaces, VLANs, failover IPs, firewall policies, snapshots, custom disk images, and ISOs.
 
 Built with the modern **Terraform Plugin Framework** (protocol version 6), supporting ephemeral token exchange (`netcup_scp_access_token`) and provider functions (`provider::netcup::ip_version`).
 
 > [!TIP]
 > **Looking for Customer Control Panel (CCP) DNS API support?**
-> Netcup has transitioned from the legacy CCP SOAP/JSON API (`DomainWebservice`) to the modern, high-performance **CloudDNS REST API**. This provider integrates directly with the CloudDNS REST API. If you have existing DNS records created under the CCP, see the [CloudDNS Migration Guide](docs/guides/migrating-to-clouddns.md) for step-by-step instructions on activating CloudDNS and importing records into Terraform with zero downtime.
+> Netcup has transitioned from the legacy CCP SOAP/JSON API (`DomainWebservice`) to the modern, high-performance **[CloudDNS REST API](https://www.netcup.com/en/helpcenter/documentation/domain/cloud-dns)**. This provider integrates directly with the CloudDNS REST API. If you have existing DNS records created under the CCP, see the [CloudDNS Migration Guide](docs/guides/migrating-to-clouddns.md) for step-by-step instructions on activating CloudDNS and importing records into Terraform with zero downtime.
 
 ## Requirements
 
@@ -26,13 +26,13 @@ Built with the modern **Terraform Plugin Framework** (protocol version 6), suppo
 
 | Category | API | Resources | Data Sources |
 | :--- | :--- | :--- | :--- |
-| **CloudDNS** | CloudDNS REST API | `netcup_clouddns_record` | `netcup_clouddns_domains`, `netcup_clouddns_records` |
-| **Servers** | SCP REST API | `netcup_scp_server`, `netcup_scp_server_action` | `netcup_scp_server`, `netcup_scp_servers`, `netcup_scp_server_metrics`, `netcup_scp_server_logs` |
-| **Networking & rDNS** | SCP REST API | `netcup_scp_rdns`, `netcup_scp_server_interface`, `netcup_scp_failover_ip_v4`, `netcup_scp_failover_ip_v6`, `netcup_scp_user_vlan` | `netcup_scp_rdns_ipv4`, `netcup_scp_rdns_ipv6`, `netcup_scp_server_interface`, `netcup_scp_server_interfaces`, `netcup_scp_user_failoverips_v4`, `netcup_scp_user_failoverips_v6`, `netcup_scp_user_vlan`, `netcup_scp_user_vlans`, `netcup_scp_vlan` |
-| **Firewall** | SCP REST API | `netcup_scp_user_firewall_policy`, `netcup_scp_server_interface_firewall` | `netcup_scp_user_firewall_policy`, `netcup_scp_user_firewall_policies` |
-| **Storage & Snapshots** | SCP REST API | `netcup_scp_server_snapshot` | `netcup_scp_server_snapshot`, `netcup_scp_server_snapshots`, `netcup_scp_server_disk`, `netcup_scp_server_disks`, `netcup_scp_server_disk_supported_drivers`, `netcup_scp_server_imageflavours`, `netcup_scp_server_iso`, `netcup_scp_server_isoimages`, `netcup_scp_user_image`, `netcup_scp_user_image_part`, `netcup_scp_user_images`, `netcup_scp_user_iso`, `netcup_scp_user_iso_part`, `netcup_scp_user_isos` |
-| **User & Access** | SCP REST API | `netcup_scp_user`, `netcup_scp_user_ssh_key`, `netcup_scp_access_token` (ephemeral) | `netcup_scp_user`, `netcup_scp_user_ssh_keys`, `netcup_scp_user_logs` |
-| **Tasks & Status** | SCP REST API | `netcup_scp_task_action` | `netcup_scp_task`, `netcup_scp_tasks`, `netcup_scp_maintenance`, `netcup_scp_server_guest_agent`, `netcup_scp_server_guest_agent_status`, `netcup_scp_server_gpu_driver`, `netcup_scp_server_rescuesystem` |
+| **CloudDNS** | [CloudDNS REST API](https://www.netcup.com/en/helpcenter/documentation/domain/cloud-dns) | `netcup_clouddns_record` | `netcup_clouddns_domains`, `netcup_clouddns_records` |
+| **Servers** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_server`, `netcup_scp_server_action` | `netcup_scp_server`, `netcup_scp_servers`, `netcup_scp_server_metrics`, `netcup_scp_server_logs` |
+| **Networking & rDNS** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_rdns`, `netcup_scp_server_interface`, `netcup_scp_failover_ip_v4`, `netcup_scp_failover_ip_v6`, `netcup_scp_user_vlan` | `netcup_scp_rdns_ipv4`, `netcup_scp_rdns_ipv6`, `netcup_scp_server_interface`, `netcup_scp_server_interfaces`, `netcup_scp_user_failoverips_v4`, `netcup_scp_user_failoverips_v6`, `netcup_scp_user_vlan`, `netcup_scp_user_vlans`, `netcup_scp_vlan` |
+| **Firewall** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_user_firewall_policy`, `netcup_scp_server_interface_firewall` | `netcup_scp_user_firewall_policy`, `netcup_scp_user_firewall_policies` |
+| **Storage & Snapshots** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_server_snapshot` | `netcup_scp_server_snapshot`, `netcup_scp_server_snapshots`, `netcup_scp_server_disk`, `netcup_scp_server_disks`, `netcup_scp_server_disk_supported_drivers`, `netcup_scp_server_imageflavours`, `netcup_scp_server_iso`, `netcup_scp_server_isoimages`, `netcup_scp_user_image`, `netcup_scp_user_image_part`, `netcup_scp_user_images`, `netcup_scp_user_iso`, `netcup_scp_user_iso_part`, `netcup_scp_user_isos` |
+| **User & Access** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_user`, `netcup_scp_user_ssh_key`, `netcup_scp_access_token` (ephemeral) | `netcup_scp_user`, `netcup_scp_user_ssh_keys`, `netcup_scp_user_logs` |
+| **Tasks & Status** | [SCP REST API](https://www.netcup.com/en/helpcenter/documentation/server/rest-api) | `netcup_scp_task_action` | `netcup_scp_task`, `netcup_scp_tasks`, `netcup_scp_maintenance`, `netcup_scp_server_guest_agent`, `netcup_scp_server_guest_agent_status`, `netcup_scp_server_gpu_driver`, `netcup_scp_server_rescuesystem` |
 
 ## Provider Configuration
 

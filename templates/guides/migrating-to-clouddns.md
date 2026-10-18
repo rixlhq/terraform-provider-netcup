@@ -7,7 +7,7 @@ description: |-
 
 # Migrating from Legacy DNS to CloudDNS
 
-Netcup is deprecating the legacy Customer Control Panel (CCP) SOAP/JSON DNS API (`DomainWebservice`) in favor of the modern [netcup CloudDNS REST API](https://api.netcup.com).
+Netcup is deprecating the legacy Customer Control Panel (CCP) SOAP/JSON DNS API (`DomainWebservice`) in favor of the modern [netcup CloudDNS REST API](https://www.netcup.com/en/helpcenter/documentation/domain/cloud-dns).
 
 The Terraform Provider for Netcup manages DNS exclusively via the modern **CloudDNS REST API** using `clouddns_api_key`. This guide outlines how to migrate your existing configurations without DNS downtime.
 
@@ -17,7 +17,7 @@ The Terraform Provider for Netcup manages DNS exclusively via the modern **Cloud
 
 1. **Switch Domain Nameservers to CloudDNS**:
    - In the [netcup CCP](https://www.customercontrolpanel.de), navigate to **Domains**.
-   - Select your domain, go to the **DNS** or **CloudDNS** tab, and activate CloudDNS.
+   - Select your domain, go to the **DNS** or **CloudDNS** tab, and activate CloudDNS (see the [netcup CloudDNS Documentation](https://www.netcup.com/en/helpcenter/documentation/domain/cloud-dns) for details).
    - Netcup automatically copies your existing zone records into CloudDNS.
 2. **Generate a CloudDNS API Key**:
    - In the CCP, navigate to **Master Data > API > API Keys**.
