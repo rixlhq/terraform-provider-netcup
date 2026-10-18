@@ -147,7 +147,7 @@ func (r *scpCrudResource) ImportState(ctx context.Context, req resource.ImportSt
 		return
 	}
 
-	parts := strings.Split(req.ID, "/")
+	parts := strings.SplitN(req.ID, "/", len(r.spec.importIDAttrs))
 	if len(parts) != len(r.spec.importIDAttrs) {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",

@@ -3,6 +3,7 @@ package scpserverdisk
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -59,7 +60,7 @@ func (d *ScpServerDiskDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := fmt.Sprintf("/api/v1/servers/%s/disks/%s", strconv.FormatInt(data.ServerId.ValueInt64(), 10), data.DiskName.ValueString())
+	path := fmt.Sprintf("/api/v1/servers/%s/disks/%s", strconv.FormatInt(data.ServerId.ValueInt64(), 10), url.PathEscape(data.DiskName.ValueString()))
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

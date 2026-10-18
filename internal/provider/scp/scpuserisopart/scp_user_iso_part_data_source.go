@@ -3,6 +3,7 @@ package scpuserisopart
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -59,7 +60,7 @@ func (d *ScpUserIsoPartDataSource) Read(ctx context.Context, req datasource.Read
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := fmt.Sprintf("/api/v1/users/%s/isos/%s/%s/parts/%s", strconv.FormatInt(data.UserId.ValueInt64(), 10), data.Key.ValueString(), data.UploadId.ValueString(), strconv.FormatInt(data.PartNumber.ValueInt64(), 10))
+	path := fmt.Sprintf("/api/v1/users/%s/isos/%s/%s/parts/%s", strconv.FormatInt(data.UserId.ValueInt64(), 10), url.PathEscape(data.Key.ValueString()), url.PathEscape(data.UploadId.ValueString()), strconv.FormatInt(data.PartNumber.ValueInt64(), 10))
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

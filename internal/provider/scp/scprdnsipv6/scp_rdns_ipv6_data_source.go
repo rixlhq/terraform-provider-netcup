@@ -3,6 +3,7 @@ package scprdnsipv6
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
@@ -58,7 +59,7 @@ func (d *ScpRdnsIpv6DataSource) Read(ctx context.Context, req datasource.ReadReq
 		resp.Diagnostics.AddError("Missing SCP Client", "The netcup provider must be configured with scp_access_token to use this data source.")
 		return
 	}
-	path := "/api/v1/rdns/ipv6/" + data.Ip.ValueString()
+	path := "/api/v1/rdns/ipv6/" + url.PathEscape(data.Ip.ValueString())
 
 	body, err := d.client.Get(ctx, path, nil)
 	if err != nil {

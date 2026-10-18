@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -87,7 +88,7 @@ func (r *scpCrudResource) buildPath(v tftypes.Value, template string) (string, e
 		if err != nil {
 			return "", fmt.Errorf("path parameter %q: %w", attr, err)
 		}
-		path = strings.Replace(path, placeholder, str, 1)
+		path = strings.Replace(path, placeholder, url.PathEscape(str), 1)
 	}
 
 	return path, nil
