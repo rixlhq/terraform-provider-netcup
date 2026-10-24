@@ -99,7 +99,18 @@ func jsonToTfList(ctx context.Context, t tftypes.Type, elemType tftypes.Type, v 
 func jsonToTfMap(ctx context.Context, t tftypes.Type, ty tftypes.Map, v any) (tftypes.Value, error) {
 	m, ok := v.(map[string]any)
 	if !ok {
-		return tftypes.Value{}, fmt.Errorf("expected map for type %s, got %T", t, v)
+		// The SCP API spells an EMPTY collection as `[]` in places where the
+		// schema declares a map — `scp_server_interfaces[*].ipv6addresses[*].rdns`
+		// is the live case (a server with no reverse-DNS entries). Accepting the
+		// empty array keeps a read-only plan from failing with
+		// "expected map for type tftypes.Map[tftypes.String], got []interface {}".
+		// A NON-empty array is still an error: silently dropping entries would
+		// hide data the caller asked for.
+		if arr, isArr := v.([]any); isArr && len(arr) == 0 {
+			m = map[string]any{}
+		} else {
+			return tftypes.Value{}, fmt.Errorf("expected map for type %s, got %T", t, v)
+		}
 	}
 	vals := make(map[string]tftypes.Value, len(m))
 	for k, elem := range m {
