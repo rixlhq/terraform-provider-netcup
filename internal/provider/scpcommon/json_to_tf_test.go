@@ -1,10 +1,10 @@
-package scpcommon
+package scpcommon_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/rixlhq/terraform-provider-netcup/internal/provider/scpcommon"
 )
 
 // TestJSONToTfValue_MapFromEmptyArray pins the SCP API's empty-collection
@@ -13,10 +13,11 @@ import (
 // as [] for a server with no reverse-DNS entries), while a NON-empty array stays
 // a loud error so entries are never silently dropped.
 func TestJSONToTfValue_MapFromEmptyArray(t *testing.T) {
-	ctx := context.Background()
+	t.Parallel()
+	ctx := t.Context()
 	mapType := tftypes.Map{ElementType: tftypes.String}
 
-	empty, err := jsonToTfValue(ctx, mapType, []any{})
+	empty, err := scpcommon.JSONToTfValue(ctx, mapType, []any{})
 	if err != nil {
 		t.Fatalf("empty array must convert to an empty map, got error: %v", err)
 	}
@@ -28,12 +29,12 @@ func TestJSONToTfValue_MapFromEmptyArray(t *testing.T) {
 		t.Fatalf("expected an empty map, got %d entries", len(emptyMap))
 	}
 
-	if _, err := jsonToTfValue(ctx, mapType, []any{"not-a-map-entry"}); err == nil {
+	if _, err := scpcommon.JSONToTfValue(ctx, mapType, []any{"not-a-map-entry"}); err == nil {
 		t.Fatal("a NON-empty array must stay an error (no silent data loss)")
 	}
 
 	// A normal object still converts, and null stays null.
-	obj, err := jsonToTfValue(ctx, mapType, map[string]any{"k": "v"})
+	obj, err := scpcommon.JSONToTfValue(ctx, mapType, map[string]any{"k": "v"})
 	if err != nil {
 		t.Fatalf("object conversion regressed: %v", err)
 	}
@@ -46,7 +47,7 @@ func TestJSONToTfValue_MapFromEmptyArray(t *testing.T) {
 		t.Fatalf("expected k=v, got %q (err %v)", got, err)
 	}
 
-	null, err := jsonToTfValue(ctx, mapType, nil)
+	null, err := scpcommon.JSONToTfValue(ctx, mapType, nil)
 	if err != nil {
 		t.Fatalf("null must convert to a null value: %v", err)
 	}
