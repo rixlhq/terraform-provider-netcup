@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.1](https://github.com/rixlhq/terraform-provider-netcup/compare/v2.1.0...v2.1.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **scpcommon:** accept an empty array where a map is expected ([45faf03](https://github.com/rixlhq/terraform-provider-netcup/commit/45faf03adbd4c0fc872958310b9402cf6051fd26)), closes [#46](https://github.com/rixlhq/terraform-provider-netcup/issues/46)
+* **scpcommon:** accept an empty array where a map is expected (closes [#46](https://github.com/rixlhq/terraform-provider-netcup/issues/46)) ([f208774](https://github.com/rixlhq/terraform-provider-netcup/commit/f208774433b7d8b1f203586149e5979ac06ec148))
+
 ## [2.1.0](https://github.com/rixlhq/terraform-provider-netcup/compare/v2.0.0...v2.1.0) (2026-10-18)
 
 
